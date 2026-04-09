@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import farmerRoutes from './routes/farmerRoutes.js';
+import farmerRoutes from './routes/itemRoutes.js';
 
 // 1. Load config FIRST (so the database URI is ready)
 dotenv.config();
