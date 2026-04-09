@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import farmerRoutes from './routes/itemRoutes.js';
+import itemRoutes from './routes/itemRoutes.js';
 
 // 1. Load config FIRST (so the database URI is ready)
 dotenv.config();
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // 4. Use your Routes FOURTH (Now 'app' exists, so this won't crash)
-app.use('/api/farmers', farmerRoutes);
+app.use('/api/items', itemRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "";
@@ -29,3 +29,4 @@ mongoose.connect(MONGO_URI)
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
