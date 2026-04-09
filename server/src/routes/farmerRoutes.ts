@@ -1,9 +1,18 @@
 import express from 'express';
-// Add .js to the end of the controller path
-import { getFarmers } from '../controllers/farmerController.js';
+import { 
+  getFarmers, 
+  addFarmer, 
+  getFarmerById, 
+  updateFarmer, 
+  deleteFarmer 
+} from '../controllers/farmerController.js';
 
 const router = express.Router();
 
-router.get('/', getFarmers);
+router.get('/', getFarmers);           // Get all
+router.post('/', addFarmer);           // Add new
+router.get('/:id', getFarmerById);     // Get one
+router.put('/:id', updateFarmer);      // Update
+router.delete('/:id', deleteFarmer);   // Delete
 
 export default router;
