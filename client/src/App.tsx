@@ -1,54 +1,50 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import AddItem from './assets/components/AddItem' // Make sure path matches your screenshot
 import './App.css'
 
 function App() {
-  // Logic: This is like a Python list that React 'watches' for changes
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<any[]>([]);
 
-  // Logic: The function that fetches data from your Node.js server
   const fetchItems = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/items')
-      setItems(response.data)
+      const response = await axios.get('http://localhost:5000/api/items');
+      setItems(response.data);
     } catch (error) {
-      console.error("Error fetching items:", error)
+      console.log("Server unreachable - likely office network restriction.");
     }
-  }
+  };
 
-  // Logic: Run 'fetchItems' as soon as the component loads
   useEffect(() => {
-    fetchItems()
-  }, [])
-
+    fetchItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div className="app-container">
-      <header id="center">
+      <header>
         <h1>Green-Cart 🛒</h1>
-        <p>Fresh items directly from the database</p>
+        <p>B.Tech Project: MERN Stack Inventory</p>
       </header>
 
-      <section id="next-steps">
+      <main>
+        {/* Pass fetchItems to AddItem so it can refresh the list after adding */}
+        <AddItem onAdded={fetchItems} />
+
         <div className="item-display">
-          <h2>Items in Inventory</h2>
-          
+          <h2>Inventory List</h2>
           {items.length === 0 ? (
-            <div className="no-items">
-              <p>No items found! Your MongoDB is empty.</p>
-              <p>Check <code>localhost:5000/api/items</code> to verify.</p>
-            </div>
+            <p>No items found. Add one above!</p>
           ) : (
-            <ul className="item-list">
+            <ul>
               {items.map((item) => (
                 <li key={item._id} className="item-card">
-                  <h3>{item.name}</h3>
-                  <p>Location: {item.location}</p>
+                  <strong>{item.name}</strong> - {item.location}
                 </li>
               ))}
             </ul>
           )}
         </div>
-      </section>
+      </main>
     </div>
   )
 }
