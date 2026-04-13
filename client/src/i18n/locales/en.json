@@ -1,0 +1,238 @@
+{
+  "app": {
+    "name": "GreenCart",
+    "tagline": "Fresh from Farm to Your Doorstep"
+  },
+  "nav": {
+    "home": "Home",
+    "products": "Products",
+    "categories": "Categories",
+    "cart": "Cart",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    "orders": "Orders",
+    "dashboard": "Dashboard",
+    "farmerDashboard": "Farmer Dashboard",
+    "adminDashboard": "Admin Dashboard",
+    "becomeFarmer": "Become a Farmer"
+  },
+  "home": {
+    "hero": {
+      "title": "Fresh from Farm to Your Doorstep",
+      "subtitle": "Connect directly with Indian farmers. Get fresh, organic produce delivered straight to your home while supporting sustainable agriculture.",
+      "shopNow": "Shop Now",
+      "joinAsFarmer": "Become a Farmer"
+    },
+    "features": {
+      "freshLocal": {
+        "title": "Fresh & Local",
+        "description": "Get farm-fresh produce delivered straight from local farmers to your doorstep."
+      },
+      "supportFarmers": {
+        "title": "Support Local Farmers",
+        "description": "Every purchase directly supports Indian farming communities and sustainable agriculture."
+      },
+      "quality": {
+        "title": "Quality Guaranteed",
+        "description": "We ensure the highest quality standards with every product on our platform."
+      },
+      "title": "Why Choose GreenCart?",
+      "subtitle": "We're building a sustainable future by connecting communities with local farmers."
+    },
+    "categories": {
+      "title": "Shop by Category",
+      "subtitle": "Explore our wide range of fresh produce categories"
+    },
+    "featured": {
+      "title": "Featured Products",
+      "subtitle": "Handpicked fresh produce from our partner farmers",
+      "viewAll": "View All Products"
+    }
+  },
+  "products": {
+    "title": "All Products",
+    "search": "Search products...",
+    "filter": "Filter",
+    "sort": "Sort by",
+    "categories": "Categories",
+    "all": "All",
+    "vegetables": "Vegetables",
+    "fruits": "Fruits",
+    "dairy": "Dairy",
+    "grains": "Grains & Pulses",
+    "spices": "Spices",
+    "dryFruits": "Dry Fruits",
+    "honey": "Organic Honey",
+    "herbs": "Fresh Herbs",
+    "noProducts": "No products found",
+    "addToCart": "Add to Cart",
+    "inCart": "In Cart",
+    "outOfStock": "Out of Stock",
+    "reviews": "reviews",
+    "perUnit": "per {{unit}}"
+  },
+  "product": {
+    "details": "Product Details",
+    "description": "Description",
+    "price": "Price",
+    "quantity": "Quantity",
+    "category": "Category",
+    "farmer": "Farmer",
+    "location": "Location",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "addToCart": "Add to Cart",
+    "relatedProducts": "Related Products"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "continueShopping": "Continue Shopping",
+    "subtotal": "Subtotal",
+    "deliveryFee": "Delivery Fee",
+    "free": "Free",
+    "total": "Total",
+    "checkout": "Proceed to Checkout",
+    "clearCart": "Clear Cart",
+    "remove": "Remove",
+    "items": "items",
+    "addMoreForFreeDelivery": "Add ₹{{amount}} more for free delivery!"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "deliveryInfo": "Delivery Information",
+    "fullName": "Full Name",
+    "phone": "Phone Number",
+    "address": "Delivery Address",
+    "city": "City",
+    "state": "State",
+    "zipCode": "PIN Code",
+    "payment": "Payment Method",
+    "card": "Credit/Debit Card",
+    "cod": "Cash on Delivery",
+    "upi": "UPI",
+    "placeOrder": "Place Order",
+    "orderSummary": "Order Summary",
+    "terms": "By placing this order, you agree to our Terms of Service"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account to continue",
+      "email": "Email Address",
+      "password": "Password",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "register": "Create Account"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join GreenCart as a consumer or farmer",
+      "name": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "role": "I want to",
+      "consumer": "Buy Products",
+      "farmer": "Sell Products",
+      "address": "Address",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "login": "Sign In"
+    }
+  },
+  "farmer": {
+    "dashboard": {
+      "title": "Farmer Dashboard",
+      "totalProducts": "Total Products",
+      "activeProducts": "Active Products",
+      "pendingOrders": "Pending Orders",
+      "totalRevenue": "Total Revenue",
+      "recentOrders": "Recent Orders",
+      "yourProducts": "Your Products",
+      "addProduct": "Add Product",
+      "viewAll": "View All"
+    },
+    "products": {
+      "title": "My Products",
+      "addNew": "Add New Product",
+      "edit": "Edit",
+      "delete": "Delete",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "orders": {
+      "title": "My Orders",
+      "orderId": "Order #",
+      "status": "Status",
+      "updateStatus": "Update Status",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "users": "Users",
+      "products": "Products",
+      "orders": "Orders",
+      "revenue": "Revenue"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "next": "Next",
+    "previous": "Previous",
+    "showing": "Showing",
+    "of": "of",
+    "results": "results",
+    "perPage": "per page",
+    "all": "All",
+    "select": "Select",
+    "required": "Required",
+    "optional": "Optional",
+    "submit": "Submit",
+    "update": "Update",
+    "create": "Create",
+    "back": "Back",
+    "continue": "Continue",
+    "language": "Language"
+  },
+  "footer": {
+    "shop": "Shop",
+    "company": "Company",
+    "support": "Support",
+    "legal": "Legal",
+    "about": "About Us",
+    "farmers": "Our Kisan Partners",
+    "sustainability": "Sustainability",
+    "careers": "Careers",
+    "help": "Help Center",
+    "contact": "Contact Us",
+    "faq": "FAQs",
+    "shipping": "Shipping Info",
+    "returns": "Return Policy",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "sellerTerms": "Seller Terms",
+    "rights": "All rights reserved",
+    "madeWithLove": "Made with pride for Indian farmers"
+  }
+}
