@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
-import { AuthProvider } from './context/AuthContext.tsx'
-import { CartProvider } from './context/CartContext.tsx'
-import { ToastProvider } from './context/ToastContext.tsx'
+import { AuthProvider } from './features/auth/context/AuthContext.tsx'
+import { CartProvider } from './features/cart/context/CartContext.tsx'
+import { ToastProvider } from './utils/ToastContext.tsx'
 import './i18n'
 import './index.css'
 

@@ -1,20 +1,20 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { Footer } from './components/Footer';
-import { Navbar } from './components/Navbar';
-import { ProtectedRoute, PublicOnlyRoute } from './components/ProtectedRoute';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { AdminProducts } from './pages/AdminProducts';
-import { AdminUsers } from './pages/AdminUsers';
-import { Cart } from './pages/Cart';
-import { Checkout } from './pages/Checkout';
-import { FarmerDashboard } from './pages/FarmerDashboard';
-import { FarmerOrders } from './pages/FarmerOrders';
-import { FarmerProducts } from './pages/FarmerProducts';
-import { Home } from './pages/Home';
-import { Login } from './pages/Login';
-import { ProductDetails } from './pages/ProductDetails';
-import { Products } from './pages/Products';
-import { Register } from './pages/Register';
+import { Footer } from './components/shared/Footer';
+import { Navbar } from './components/shared/Navbar';
+import { ProtectedRoute, PublicOnlyRoute } from './components/shared/ProtectedRoute';
+import { AdminDashboard } from './app/(main)/admin/AdminDashboard';
+import { AdminProducts } from './app/(main)/admin/AdminProducts';
+import { AdminUsers } from './app/(main)/admin/AdminUsers';
+import { Cart } from './app/(main)/cart/Cart';
+import { Checkout } from './app/(main)/cart/Checkout';
+import { FarmerDashboard } from './app/(main)/farmer/FarmerDashboard';
+import { FarmerOrders } from './app/(main)/farmer/FarmerOrders';
+import { FarmerProducts } from './app/(main)/farmer/FarmerProducts';
+import { Home } from './app/(main)/Home';
+import { Login } from './app/authentication/Login';
+import { ProductDetails } from './app/(main)/products/ProductDetails';
+import { Products } from './app/(main)/products/Products';
+import { Register } from './app/authentication/Register';
 
 function App() {
   return (
