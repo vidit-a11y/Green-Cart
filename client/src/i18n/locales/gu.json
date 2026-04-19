@@ -1,0 +1,127 @@
+{
+  "app": {
+    "name": "GreenCart",
+    "tagline": "ખેડૂત પાસેથી સીધું તમારા દરવાજે"
+  },
+  "nav": {
+    "home": "હોમ",
+    "products": "ઉત્પાદનો",
+    "cart": "કાર્ટ",
+    "login": "લોગિન",
+    "register": "રજિસ્ટર",
+    "logout": "લોગઆઉટ",
+    "dashboard": "ડેશબોર્ડ",
+    "farmerDashboard": "ખેડૂત ડેશબોર્ડ",
+    "becomeFarmer": "ખેડૂત બનો"
+  },
+  "home": {
+    "hero": {
+      "title": "ખેડૂત પાસેથી સીધું તમારા દરવાજે",
+      "subtitle": "ભારતીય ખેડૂતો સાથે સીધા જોડાઓ. તાજા, કુદરતી ઉત્પાદનો સીધા તમારા ઘરે મેળવો.",
+      "shopNow": "હવે ખરીદો",
+      "joinAsFarmer": "ખેડૂત તરીકે જોડાઓ"
+    },
+    "categories": {
+      "title": "શ્રેણી પ્રમાણે ખરીદી",
+      "viewAll": "બધા જુઓ"
+    },
+    "featured": {
+      "title": "વિશેષ ઉત્પાદનો",
+      "viewAll": "બધા જુઓ"
+    }
+  },
+  "products": {
+    "title": "બધા ઉત્પાદનો",
+    "search": "ઉત્પાદનો શોધો...",
+    "categories": "શ્રેણીઓ",
+    "all": "બધા",
+    "vegetables": "શાકભાજી",
+    "fruits": "ફળો",
+    "dairy": "દૂધજન્ય પદાર્થો",
+    "noProducts": "કોઈ ઉત્પાદનો મળ્યા નથી",
+    "addToCart": "કાર્ટમાં ઉમેરો",
+    "inCart": "કાર્ટમાં",
+    "outOfStock": "સ્ટોકમાં નથી"
+  },
+  "cart": {
+    "title": "શોપિંગ કાર્ટ",
+    "empty": "તમારું કાર્ટ ખાલી છે",
+    "continueShopping": "શોપિંગ ચાલુ રાખો",
+    "subtotal": "પેટા-કુલ",
+    "deliveryFee": "ડિલિવરી ફી",
+    "free": "ફ્રી",
+    "total": "કુલ",
+    "checkout": "ચેકઆઉટ",
+    "items": "વસ્તુઓ"
+  },
+  "checkout": {
+    "title": "ચેકઆઉટ",
+    "deliveryInfo": "ડિલિવરી માહિતી",
+    "fullName": "પૂરું નામ",
+    "phone": "ફોન",
+    "address": "ડિલિવરી એડ્રેસ",
+    "city": "શહેર",
+    "state": "રાજ્ય",
+    "zipCode": "પિન કોડ",
+    "payment": "પેમેન્ટ પદ્ધતિ",
+    "card": "ક્રેડિટ/ડેબિટ કાર્ડ",
+    "cod": "કેશ ઓન ડિલિવરી",
+    "upi": "યુપીઆઈ",
+    "placeOrder": "ઓર્ડર આપો",
+    "orderSummary": "ઓર્ડર સારાંશ"
+  },
+  "auth": {
+    "login": {
+      "title": "પાછા સ્વાગત છે",
+      "email": "ઈમેલ",
+      "password": "પાસવર્ડ",
+      "submit": "સાઈન ઈન",
+      "noAccount": "એકાઉન્ટ નથી?",
+      "register": "એકાઉન્ટ બનાવો"
+    },
+    "register": {
+      "title": "એકાઉન્ટ બનાવો",
+      "name": "પૂરું નામ",
+      "email": "ઈમેલ",
+      "phone": "ફોન",
+      "password": "પાસવર્ડ",
+      "consumer": "પ્રોડક્ટ ખરીદો",
+      "farmer": "પ્રોડક્ટ વેચો",
+      "submit": "એકાઉન્ટ બનાવો",
+      "hasAccount": "પહેલેથી જ એકાઉન્ટ છે?",
+      "login": "સાઈન ઈન"
+    }
+  },
+  "common": {
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "error": "ભૂલ",
+    "success": "સફળ",
+    "cancel": "રદ કરો",
+    "save": "સેવ",
+    "edit": "એડિટ",
+    "delete": "ડિલીટ",
+    "close": "બંધ કરો",
+    "search": "શોધ",
+    "filter": "ફિલ્ટર",
+    "sort": "સોર્ટ",
+    "all": "બધા",
+    "submit": "સબમિટ",
+    "update": "અપડેટ",
+    "create": "બનાવો",
+    "back": "પાછા",
+    "continue": "ચાલુ રાખો",
+    "language": "ભાષા"
+  },
+  "footer": {
+    "shop": "દુકાન",
+    "company": "કંપની",
+    "support": "સહાય",
+    "legal": "કાયદાકીય",
+    "about": "અમારા વિશે",
+    "farmers": "અમારા ખેડૂતો",
+    "terms": "સેવાની શરતો",
+    "privacy": "ગોપનીયતા નીતિ",
+    "rights": "બધા હક્કો અમારા પાસે છે",
+    "madeWithLove": "ભારતીય ખેડૂતો માટે ગૌરવપૂર્વક બનાવેલ"
+  }
+}
