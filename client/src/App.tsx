@@ -1,7 +1,4 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { Footer } from './components/shared/Footer';
-import { Navbar } from './components/shared/Navbar';
-import { ProtectedRoute, PublicOnlyRoute } from './components/shared/ProtectedRoute';
 import { AdminDashboard } from './app/(main)/admin/AdminDashboard';
 import { AdminProducts } from './app/(main)/admin/AdminProducts';
 import { AdminUsers } from './app/(main)/admin/AdminUsers';
@@ -11,10 +8,13 @@ import { FarmerDashboard } from './app/(main)/farmer/FarmerDashboard';
 import { FarmerOrders } from './app/(main)/farmer/FarmerOrders';
 import { FarmerProducts } from './app/(main)/farmer/FarmerProducts';
 import { Home } from './app/(main)/Home';
-import { Login } from './app/authentication/Login';
 import { ProductDetails } from './app/(main)/products/ProductDetails';
 import { Products } from './app/(main)/products/Products';
+import { Login } from './app/authentication/Login';
 import { Register } from './app/authentication/Register';
+import { Footer } from './components/shared/Footer';
+import { Navbar } from './components/shared/Navbar';
+import { ProtectedRoute, PublicOnlyRoute } from './components/shared/ProtectedRoute';
 
 function App() {
   return (

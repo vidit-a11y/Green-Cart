@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
 import { useAuth } from '../../features/auth/context/AuthContext';
-import { useToast } from '../../utils/ToastContext';
 import type { UserRole } from '../../types';
+import { useToast } from '../../utils/ToastContext';
 
 export function Register() {
   const navigate = useNavigate();
@@ -196,6 +196,7 @@ export function Register() {
             >
               Create Account
             </Button>
+
           </form>
 
           <div className="mt-6 text-center">

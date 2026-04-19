@@ -15,7 +15,7 @@ const featuredProducts: Product[] = [
     quantity: 50,
     category: 'Fruits',
     unit: 'dozen',
-    images: [],
+    images: ['https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=400&fit=crop'],
     farmerId: 'f1',
     farmerName: 'Patil Farms',
     location: 'Ratnagiri, Maharashtra',
@@ -33,7 +33,7 @@ const featuredProducts: Product[] = [
     quantity: 100,
     category: 'Vegetables',
     unit: 'bunch',
-    images: [],
+    images: ['https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop'],
     farmerId: 'f2',
     farmerName: 'Krishna Organic Farms',
     location: 'Bangalore, Karnataka',
@@ -51,7 +51,7 @@ const featuredProducts: Product[] = [
     quantity: 40,
     category: 'Dairy',
     unit: 'kg',
-    images: [],
+    images: ['https://images.unsplash.com/photo-1624806992066-5ffcf7ca184d?w=400&h=400&fit=crop'],
     farmerId: 'f3',
     farmerName: 'Dairy Fresh Co-operative',
     location: 'Indore, Madhya Pradesh',
@@ -69,7 +69,7 @@ const featuredProducts: Product[] = [
     quantity: 150,
     category: 'Vegetables',
     unit: 'kg',
-    images: [],
+    images: ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop'],
     farmerId: 'f4',
     farmerName: 'Sharma Vegetable Farms',
     location: 'Nashik, Maharashtra',
@@ -396,7 +396,15 @@ export function Home() {
             {featuredProducts.map((product, index) => (
               <div key={product.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <ProductCard
-                  {...product}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  unit={product.unit}
+                  image={product.images[0]}
+                  farmerName={product.farmerName}
+                  location={product.location}
+                  rating={product.rating}
+                  reviewsCount={product.reviewsCount}
                   onClick={() => window.location.href = `/products/${product.id}`}
                   onAddToCart={() => {}}
                 />
