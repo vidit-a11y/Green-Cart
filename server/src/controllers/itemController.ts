@@ -1,17 +1,15 @@
 import { Request, Response } from 'express';
-import { Item } from '../models/item.js'; // 1. Make sure this is 'Item' not 'Farmer'
+import { Item } from '../models/item.js';
 
-// GET all items
 export const getItems = async (req: Request, res: Response) => {
   try {
-    const items = await Item.find(); // 2. Using Item model
+    const items = await Item.find();
     res.json(items);
   } catch (err) {
     res.status(500).json({ message: "Error fetching items" });
   }
 };
 
-// ADD an item (POST)
 export const addItem = async (req: Request, res: Response) => {
   try {
     const newItem = new Item(req.body);
@@ -22,7 +20,6 @@ export const addItem = async (req: Request, res: Response) => {
   }
 };
 
-// GET a single item by ID
 export const getItemById = async (req: Request, res: Response) => {
   try {
     const item = await Item.findById(req.params.id);
@@ -33,7 +30,6 @@ export const getItemById = async (req: Request, res: Response) => {
   }
 };
 
-// UPDATE an item (PUT)
 export const updateItem = async (req: Request, res: Response) => {
   try {
     const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -43,7 +39,6 @@ export const updateItem = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE an item (DELETE)
 export const deleteItem = async (req: Request, res: Response) => {
   try {
     await Item.findByIdAndDelete(req.params.id);

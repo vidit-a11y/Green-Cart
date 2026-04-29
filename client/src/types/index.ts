@@ -1,4 +1,3 @@
-// User Types
 export type UserRole = 'farmer' | 'consumer' | 'admin';
 
 export interface User {
@@ -25,7 +24,6 @@ export interface LoginData {
   password: string;
 }
 
-// Product Types
 export interface Product {
   id: string;
   name: string;
@@ -57,7 +55,6 @@ export interface ProductFormData {
   isAvailable: boolean;
 }
 
-// Cart Types
 export interface CartItem {
   product: Product;
   quantity: number;
@@ -73,7 +70,6 @@ export interface CartContextType {
   totalPrice: number;
 }
 
-// Order Types
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 
 export interface OrderItem {
@@ -97,7 +93,6 @@ export interface Order {
   updatedAt: string;
 }
 
-// Filter Types
 export interface ProductFilters {
   category?: string;
   minPrice?: number;
@@ -108,7 +103,6 @@ export interface ProductFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-// API Response Types
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -123,7 +117,6 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-// Toast Types
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface Toast {
@@ -133,7 +126,6 @@ export interface Toast {
   duration?: number;
 }
 
-// Category Types
 export interface Category {
   id: string;
   name: string;

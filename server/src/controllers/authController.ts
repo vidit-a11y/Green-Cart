@@ -1,30 +1,28 @@
-import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Generate JWT token
 const generateToken = (userId: string) => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 };
 
-// Register with email/password
 export const register = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role, phone, address } = req.body;
 
-    // Check if user exists
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // Hash password
+    
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    
     const user = new User({
       name,
       email,
@@ -52,18 +50,17 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login with email/password
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
+    
     const user = await User.findOne({ email });
     if (!user || !user.password) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
+    
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -85,13 +82,12 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// Google OAuth callback
 export const googleCallback = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const token = generateToken(user._id);
     
-    // Redirect to frontend with token
+    
     const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`;
     res.redirect(redirectUrl);
   } catch (error) {
@@ -99,7 +95,6 @@ export const googleCallback = async (req: Request, res: Response) => {
   }
 };
 
-// Get current user
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
@@ -115,14 +110,13 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   }
 };
 
-// Update profile
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
     const updates = req.body;
     
-    delete updates.password; // Don't update password through this route
-    delete updates.googleId; // Don't update Google ID
+    delete updates.password;
+    delete updates.googleId;
     
     const user = await User.findByIdAndUpdate(
       userId,

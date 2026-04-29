@@ -1,8 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-// Create axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -11,7 +10,6 @@ export const api = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor to add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
@@ -25,7 +23,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {

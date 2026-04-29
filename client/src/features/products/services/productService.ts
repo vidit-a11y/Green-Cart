@@ -18,8 +18,15 @@ export const productService = {
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    const response = await api.get<ApiResponse<PaginatedResponse<Product>>>(`/products?${params}`);
-    return response.data.data;
+    const response = await api.get<Product[]>(`/products?${params}`);
+
+return {
+  data: response.data,
+  page: 1,
+  total: response.data.length,
+  limit: limit,
+  totalPages: 1
+};
   },
 
   async getById(id: string): Promise<Product> {

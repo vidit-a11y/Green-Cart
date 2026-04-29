@@ -1,0 +1,92 @@
+[
+  {
+    "_id": { "$oid": "6641a2b3c4d5e6f7a8b9c0e8" },
+    "name": "Rahul Sharma",
+    "email": "rahul.sharma@example.com",
+    "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "role": "consumer",
+    "phone": "+91 98765 43210",
+    "address": {
+      "street": "123 MG Road",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400001",
+      "country": "India"
+    },
+    "isActive": true,
+    "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+    "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "6641a2b3c4d5e6f7a8b9c0e9" },
+    "name": "Priya Patel",
+    "email": "priya.patel@example.com",
+    "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "role": "farmer",
+    "phone": "+91 87654 32109",
+    "address": {
+      "street": "456 Farm Lane",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380001",
+      "country": "India"
+    },
+    "isActive": true,
+    "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+    "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "6641a2b3c4d5e6f7a8b9c0ea" },
+    "name": "Amit Kumar",
+    "email": "amit.kumar@example.com",
+    "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "role": "consumer",
+    "phone": "+91 76543 21098",
+    "address": {
+      "street": "789 Park Street",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560001",
+      "country": "India"
+    },
+    "isActive": true,
+    "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+    "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "6641a2b3c4d5e6f7a8b9c0eb" },
+    "name": "Sneha Reddy",
+    "email": "sneha.reddy@example.com",
+    "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "role": "admin",
+    "phone": "+91 65432 10987",
+    "address": {
+      "street": "321 Tech Hub",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "pincode": "500001",
+      "country": "India"
+    },
+    "isActive": true,
+    "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+    "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "6641a2b3c4d5e6f7a8b9c0ec" },
+    "name": "Vikram Singh",
+    "email": "vikram.singh@example.com",
+    "password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "role": "farmer",
+    "phone": "+91 54321 09876",
+    "address": {
+      "street": "654 Green Fields",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "pincode": "302001",
+      "country": "India"
+    },
+    "isActive": true,
+    "createdAt": { "$date": "2024-01-01T00:00:00.000Z" },
+    "updatedAt": { "$date": "2024-01-01T00:00:00.000Z" }
+  }
+]
