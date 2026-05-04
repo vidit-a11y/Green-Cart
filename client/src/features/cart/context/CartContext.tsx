@@ -19,7 +19,14 @@ const CART_STORAGE_KEY = 'greencart_cart';
 function getStoredCart(): CartItem[] {
   try {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    const parsed: CartItem[] = JSON.parse(stored);
+    // Clear stale cart items where product.id is missing (old _id-only data)
+    const valid = parsed.filter((item) => !!item.product?.id);
+    if (valid.length !== parsed.length) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(valid));
+    }
+    return valid;
   } catch {
     return [];
   }

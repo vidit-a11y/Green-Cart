@@ -8,6 +8,7 @@ import { useAuth } from '../../../features/auth/context/AuthContext';
 import { useToast } from '../../../utils/ToastContext';
 import { productService } from '../../../features/products/services/productService';
 import type { Product, ProductFormData } from '../../../types';
+import { uploadImage } from '../../../utils/uploadImage';
 
 const categories = [
   'Vegetables',
@@ -59,6 +60,9 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     isAvailable: product?.isAvailable ?? true,
     images: product?.images || [],
   });
+
+  const [file, setFile] = useState<File | null>(null);
+const [uploading, setUploading] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -185,6 +189,54 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductFormProp
         <span className="text-gray-700 dark:text-gray-300">Available for purchase</span>
       </label>
 
+      <div>
+  <label className="block text-sm font-medium mb-2">
+    Upload Product Image
+  </label>
+
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => setFile(e.target.files?.[0] || null)}
+  />
+
+  <button
+    type="button"
+    onClick={async () => {
+      if (!file) return;
+
+      try {
+        setUploading(true);
+        const url = await uploadImage(file);
+
+        // 🔥 IMPORTANT: save into formData
+        setFormData((prev) => ({
+          ...prev,
+          images: [url], // or [...prev.images, url] for multiple
+        }));
+
+        alert("Image uploaded!");
+      } catch (err) {
+        console.error(err);
+        alert("Upload failed");
+      } finally {
+        setUploading(false);
+      }
+    }}
+    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
+  >
+    {uploading ? "Uploading..." : "Upload Image"}
+  </button>
+
+  {/* Preview */}
+  {formData.images.length > 0 && (
+    <img
+      src={formData.images[0]}
+      alt="preview"
+      className="w-32 h-32 mt-3 rounded"
+    />
+  )}
+</div>
       <div className="flex gap-4">
         <Button type="submit" isLoading={isLoading}>
           {product ? 'Update Product' : 'Add Product'}
@@ -361,3 +413,5 @@ export function FarmerProducts() {
     </div>
   );
 }
+
+

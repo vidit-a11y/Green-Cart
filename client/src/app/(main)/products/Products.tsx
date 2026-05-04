@@ -95,6 +95,10 @@ export function Products() {
     let sortOrder: 'asc' | 'desc' = 'desc';
 
     switch (value) {
+      case 'newest':
+        sortBy = 'date';
+        sortOrder = 'desc';
+        break;
       case 'price-asc':
         sortBy = 'price';
         sortOrder = 'asc';
@@ -107,6 +111,9 @@ export function Products() {
         sortBy = 'name';
         sortOrder = 'asc';
         break;
+      default:
+        sortBy = 'date';
+        sortOrder = 'desc';
     }
 
     setFilters((prev) => ({ ...prev, sortBy, sortOrder }));

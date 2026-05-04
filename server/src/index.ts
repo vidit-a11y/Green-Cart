@@ -1,10 +1,13 @@
+import './env.js';
+
 import cors from 'cors';
-import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
+import passport from 'passport';
+import authRoutes from './routes/authRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
-
-dotenv.config();
+import uploadRoutes from './routes/uploadRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 
 const app = express();
 
@@ -14,7 +17,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use(passport.initialize());
+app.use('/api/auth', authRoutes);
 app.use('/api/products', itemRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/orders', orderRoutes);
 
 const PORT = process.env.PORT || 5001;
 const MONGO_URI = process.env.MONGO_URI;

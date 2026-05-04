@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose';
-import { it } from 'node:test';
+
 
 const itemSchema = new mongoose.Schema({
 
@@ -10,8 +10,8 @@ const itemSchema = new mongoose.Schema({
   quantity: Number,
   category: String,
   unit: String,
-  images: [String],
-  farmerId: String,
+  images: [String],    // check the type in db
+  farmerId: String,    // int
   farmerName: String,
   location: String,
   isAvailable: Boolean,
@@ -20,6 +20,6 @@ const itemSchema = new mongoose.Schema({
 
 });
 
-export const Item = mongoose.model('Item', itemSchema,'products');
+export const Item = mongoose.model('Item', itemSchema, 'products');
 
 

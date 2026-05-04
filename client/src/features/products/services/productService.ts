@@ -1,6 +1,14 @@
 import type { ApiResponse, PaginatedResponse, Product, ProductFilters, ProductFormData } from '../../../types';
 import api from '../../../lib/api';
 
+// MongoDB returns _id — normalize it to id so cart identity works correctly
+function normalizeProduct(raw: any): Product {
+  return {
+    ...raw,
+    id: raw._id ?? raw.id,
+  };
+}
+
 export const productService = {
   async getAll(filters?: ProductFilters, page = 1, limit = 12): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams();
@@ -18,20 +26,16 @@ export const productService = {
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    const response = await api.get<Product[]>(`/products?${params}`);
-
-return {
-  data: response.data,
-  page: 1,
-  total: response.data.length,
-  limit: limit,
-  totalPages: 1
-};
+    const response = await api.get<PaginatedResponse<Product>>(`/products?${params}`);
+    return {
+      ...response.data,
+      data: response.data.data.map(normalizeProduct),
+    };
   },
 
   async getById(id: string): Promise<Product> {
-    const response = await api.get<ApiResponse<Product>>(`/products/${id}`);
-    return response.data.data;
+    const response = await api.get<Product>(`/products/${id}`);
+    return normalizeProduct(response.data);
   },
 
   async getByFarmer(farmerId: string): Promise<Product[]> {
