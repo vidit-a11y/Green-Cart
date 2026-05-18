@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
 import { useAuth } from '../../features/auth/context/AuthContext';
@@ -7,6 +8,7 @@ import type { UserRole } from '../../types';
 import { useToast } from '../../utils/ToastContext';
 
 export function Register() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { register } = useAuth();
   const { showToast } = useToast();
@@ -27,29 +29,29 @@ export function Register() {
     const newErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = t('auth.register.nameRequired');
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('auth.register.nameMin');
     }
     
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.register.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('auth.register.emailInvalid');
     }
     
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.register.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.register.passwordMin');
     }
     
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('auth.register.passwordMismatch');
     }
     
     if (formData.phone && !/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = t('auth.register.phoneInvalid');
     }
     
     setErrors(newErrors);
@@ -71,11 +73,11 @@ export function Register() {
         formData.phone || undefined,
         formData.address || undefined
       );
-      showToast('Account created successfully!', 'success');
+      showToast(t('auth.register.success'), 'success');
       navigate('/');
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : 'Failed to create account',
+        error instanceof Error ? error.message : t('auth.register.failed'),
         'error'
       );
     } finally {
@@ -92,8 +94,8 @@ export function Register() {
   };
 
   const roleOptions = [
-    { value: 'consumer', label: 'Consumer - I want to buy fresh produce' },
-    { value: 'farmer', label: 'Farmer - I want to sell my products' },
+    { value: 'consumer', label: t('auth.register.consumerRole') },
+    { value: 'farmer', label: t('auth.register.farmerRole') },
   ];
 
   return (
@@ -107,61 +109,61 @@ export function Register() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Create Account
+              {t('auth.register.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Join GreenCart and start shopping or selling
+              {t('auth.register.subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <Input
-              label="Full Name"
+              label={t('auth.register.name')}
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your full name"
+              placeholder={t('auth.register.namePlaceholder')}
               error={errors.name}
               required
             />
 
             <Input
-              label="Email"
+              label={t('auth.register.email')}
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder={t('auth.register.emailPlaceholder')}
               error={errors.email}
               required
             />
 
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Password"
+                label={t('auth.register.password')}
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Create password"
+                placeholder={t('auth.register.passwordPlaceholder')}
                 error={errors.password}
                 required
               />
               <Input
-                label="Confirm Password"
+                label={t('auth.register.confirmPassword')}
                 type="password"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="Confirm password"
+                placeholder={t('auth.register.confirmPasswordPlaceholder')}
                 error={errors.confirmPassword}
                 required
               />
             </div>
 
             <Select
-              label="I am a..."
+              label={t('auth.register.role')}
               name="role"
               value={formData.role}
               onChange={handleChange}
@@ -170,22 +172,22 @@ export function Register() {
             />
 
             <Input
-              label="Phone Number"
+              label={t('auth.register.phone')}
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="Optional - for delivery updates"
+              placeholder={t('auth.register.phonePlaceholder')}
               error={errors.phone}
             />
 
             <Input
-              label="Address"
+              label={t('auth.register.address')}
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="Optional - your delivery address"
+              placeholder={t('auth.register.addressPlaceholder')}
             />
 
             <Button
@@ -194,26 +196,26 @@ export function Register() {
               isLoading={isLoading}
               size="lg"
             >
-              Create Account
+              {t('auth.register.submit')}
             </Button>
 
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Already have an account?{' '}
+              {t('auth.register.hasAccount')}{' '}
               <Link
                 to="/login"
                 className="text-green-600 dark:text-green-400 font-medium hover:text-green-700"
               >
-                Sign in
+                {t('auth.register.signIn')}
               </Link>
             </p>
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-              By creating an account, you agree to our Terms of Service and Privacy Policy
+              {t('auth.register.terms')}
             </p>
           </div>
         </div>

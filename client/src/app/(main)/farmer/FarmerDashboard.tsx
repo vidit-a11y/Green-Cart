@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
@@ -10,6 +11,7 @@ import { productService } from '../../../features/products/services/productServi
 import type { Order, Product } from '../../../types';
 
 export function FarmerDashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { showToast } = useToast();
   
@@ -71,10 +73,10 @@ export function FarmerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Farmer Dashboard
+            {t('farmer.dashboard.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Welcome back, {user?.name}!
+            {t('farmer.dashboard.welcome', { name: user?.name })}
           </p>
         </div>
 
@@ -88,7 +90,7 @@ export function FarmerDashboard() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Products</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('farmer.dashboard.totalProducts')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts}</p>
               </div>
             </div>
@@ -102,7 +104,7 @@ export function FarmerDashboard() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active Products</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('farmer.dashboard.activeProducts')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeProducts}</p>
               </div>
             </div>
@@ -116,7 +118,7 @@ export function FarmerDashboard() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Pending Orders</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('farmer.dashboard.pendingOrders')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pendingOrders}</p>
               </div>
             </div>
@@ -130,7 +132,7 @@ export function FarmerDashboard() {
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('farmer.dashboard.totalRevenue')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{stats.totalRevenue.toLocaleString('en-IN')}</p>
               </div>
             </div>
@@ -144,14 +146,14 @@ export function FarmerDashboard() {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Add Product
+              {t('farmer.dashboard.addProduct')}
             </Button>
           </Link>
           <Link to="/farmer/products">
-            <Button variant="outline">View All Products</Button>
+            <Button variant="outline">{t('farmer.dashboard.viewAllProducts')}</Button>
           </Link>
           <Link to="/farmer/orders">
-            <Button variant="outline">View Orders</Button>
+            <Button variant="outline">{t('farmer.dashboard.viewOrders')}</Button>
           </Link>
         </div>
 
@@ -159,9 +161,9 @@ export function FarmerDashboard() {
           {/* Recent Orders */}
           <Card padding="md">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Orders</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('farmer.dashboard.recentOrders')}</h2>
               <Link to="/farmer/orders" className="text-green-600 hover:text-green-700 text-sm font-medium">
-                View All
+                {t('farmer.dashboard.viewAll')}
               </Link>
             </div>
             
@@ -199,7 +201,7 @@ export function FarmerDashboard() {
               </div>
             ) : (
               <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                No orders yet
+                {t('farmer.dashboard.noOrders')}
               </p>
             )}
           </Card>
@@ -207,9 +209,9 @@ export function FarmerDashboard() {
           {/* Recent Products */}
           <Card padding="md">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Products</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('farmer.dashboard.yourProducts')}</h2>
               <Link to="/farmer/products" className="text-green-600 hover:text-green-700 text-sm font-medium">
-                View All
+                {t('farmer.dashboard.viewAll')}
               </Link>
             </div>
             
@@ -228,7 +230,7 @@ export function FarmerDashboard() {
                         {product.name}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        ₹{product.price.toLocaleString('en-IN')}/{product.unit} • {product.quantity} in stock
+                        ₹{product.price.toLocaleString('en-IN')}/{product.unit} • {product.quantity} {t('farmer.dashboard.inStock')}
                       </p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full ${
@@ -236,7 +238,7 @@ export function FarmerDashboard() {
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}>
-                      {product.isAvailable ? 'Active' : 'Inactive'}
+                      {product.isAvailable ? t('farmer.products.active') : t('farmer.products.inactive')}
                     </span>
                   </div>
                 ))}
@@ -244,10 +246,10 @@ export function FarmerDashboard() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">
-                  No products listed yet
+                  {t('farmer.dashboard.noProducts')}
                 </p>
                 <Link to="/farmer/products/add">
-                  <Button size="sm">Add Your First Product</Button>
+                  <Button size="sm">{t('farmer.dashboard.addFirstProduct')}</Button>
                 </Link>
               </div>
             )}

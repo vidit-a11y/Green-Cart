@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/shared/EmptyState';
@@ -18,6 +19,7 @@ const statusColors: Record<OrderStatus, string> = {
 const statusFlow: OrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered'];
 
 export function FarmerOrders() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,8 +68,8 @@ export function FarmerOrders() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Orders</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage and track customer orders</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('farmer.orders.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('farmer.orders.subtitle')}</p>
         </div>
 
         {/* Filter Tabs */}
@@ -82,7 +84,12 @@ export function FarmerOrders() {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
             >
-              {status}
+              {status === 'all' ? t('farmer.orders.all') :
+               status === 'pending' ? t('farmer.orders.pending') :
+               status === 'confirmed' ? t('farmer.orders.confirmed') :
+               status === 'shipped' ? t('farmer.orders.shipped') :
+               status === 'delivered' ? t('farmer.orders.delivered') :
+               t('farmer.orders.cancelled')}
               {status !== 'all' && (
                 <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                   {orders.filter((o) => o.status === status).length}
@@ -130,7 +137,7 @@ export function FarmerOrders() {
                             }}
                             isLoading={isUpdating}
                           >
-                            Mark as {statusFlow[statusFlow.indexOf(order.status) + 1]}
+                            {t('farmer.orders.markAs', { status: statusFlow[statusFlow.indexOf(order.status) + 1] })}
                           </Button>
                         )}
                         <Button
@@ -148,7 +155,7 @@ export function FarmerOrders() {
                       size="sm"
                       onClick={() => setSelectedOrder(order)}
                     >
-                      View Details
+                      {t('farmer.orders.viewDetails')}
                     </Button>
                   </div>
                 </div>
@@ -157,11 +164,11 @@ export function FarmerOrders() {
           </div>
         ) : (
           <EmptyState
-            title="No orders found"
+            title={t('farmer.orders.noOrders')}
             description={
               filter === 'all'
-                ? "You haven't received any orders yet."
-                : `No ${filter} orders at the moment.`
+                ? t('farmer.orders.noOrdersYet')
+                : t('farmer.orders.noStatusOrders', { status: filter })
             }
           />
         )}
@@ -199,7 +206,7 @@ export function FarmerOrders() {
 
                 {/* Items */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Items</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{t('farmer.orders.items')}</h3>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, index) => (
                       <div
@@ -219,7 +226,7 @@ export function FarmerOrders() {
 
                 {/* Delivery Address */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Delivery Address</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('farmer.orders.deliveryAddress')}</h3>
                   <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
                     {selectedOrder.deliveryAddress}
                   </p>
@@ -227,16 +234,16 @@ export function FarmerOrders() {
 
                 {/* Payment */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Payment</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('farmer.orders.payment')}</h3>
                   <p className="text-gray-600 dark:text-gray-400 capitalize">
-                    {selectedOrder.paymentMethod === 'cod' ? 'Cash on Delivery' : selectedOrder.paymentMethod}
+                    {selectedOrder.paymentMethod === 'cod' ? t('farmer.orders.cod') : selectedOrder.paymentMethod}
                   </p>
                 </div>
 
                 {/* Total */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
-                    <span>Total</span>
+                    <span>{t('farmer.orders.total')}</span>
                     <span>₹{selectedOrder.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
@@ -252,7 +259,7 @@ export function FarmerOrders() {
                         }}
                         isLoading={isUpdating}
                       >
-                        Mark as {statusFlow[statusFlow.indexOf(selectedOrder.status) + 1]}
+                        {t('farmer.orders.markAs', { status: statusFlow[statusFlow.indexOf(selectedOrder.status) + 1] })}
                       </Button>
                     )}
                     <Button
@@ -260,7 +267,7 @@ export function FarmerOrders() {
                       onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
                       className="text-red-600 border-red-600 hover:bg-red-50"
                     >
-                      Cancel Order
+                      {t('farmer.orders.cancelOrder')}
                     </Button>
                   </div>
                 )}

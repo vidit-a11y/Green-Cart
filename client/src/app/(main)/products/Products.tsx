@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { ProductCard, SkeletonCard } from '../../../components/ui/Card';
@@ -9,26 +10,28 @@ import { useToast } from '../../../utils/ToastContext';
 import { productService } from '../../../features/products/services/productService';
 import type { Product, ProductFilters } from '../../../types';
 
-const sortOptions = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'name', label: 'Name A-Z' },
-];
-
-const categories = [
-  'All',
-  'Vegetables',
-  'Fruits',
-  'Dairy',
-  'Grains & Pulses',
-  'Spices',
-  'Dry Fruits',
-  'Organic Honey',
-  'Fresh Herbs',
-];
-
 export function Products() {
+  const { t } = useTranslation();
+
+  const sortOptions = [
+    { value: 'newest', label: t('products.sortNewest') },
+    { value: 'price-asc', label: t('products.sortPriceLow') },
+    { value: 'price-desc', label: t('products.sortPriceHigh') },
+    { value: 'name', label: t('products.sortNameAZ') },
+  ];
+
+  const categories = [
+    t('products.all'),
+    t('products.vegetables'),
+    t('products.fruits'),
+    t('products.dairy'),
+    t('products.grains'),
+    t('products.spices'),
+    t('products.dryFruits'),
+    t('products.honey'),
+    t('products.herbs'),
+  ];
+
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const { addItem } = useCart();
@@ -56,11 +59,11 @@ export function Products() {
       setProducts(response.data);
       setTotalPages(response.totalPages);
     } catch (error) {
-      showToast('Failed to load products', 'error');
+      showToast(t('common.error'), 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [filters, currentPage, showToast]);
+  }, [filters, currentPage, showToast, t]);
 
   useEffect(() => {
     fetchProducts();
@@ -80,7 +83,8 @@ export function Products() {
   };
 
   const handleCategoryChange = (category: string) => {
-    const newCategory = category === 'All' ? undefined : category;
+    const allLabel = t('products.all');
+    const newCategory = category === allLabel ? undefined : category;
     setFilters((prev) => ({ ...prev, category: newCategory }));
     setCurrentPage(1);
     
@@ -144,7 +148,7 @@ export function Products() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Fresh Products
+            {t('products.freshTitle')}
           </h1>
           
           {/* Search and Controls */}
@@ -155,7 +159,7 @@ export function Products() {
                   type="text"
                   name="search"
                   defaultValue={filters.search}
-                  placeholder="Search products..."
+                  placeholder={t('products.search')}
                   className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,7 +183,7 @@ export function Products() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                Filters
+                {t('products.filter')}
               </Button>
             </div>
           </div>
@@ -191,7 +195,7 @@ export function Products() {
                 key={category}
                 onClick={() => handleCategoryChange(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  (category === 'All' && !filters.category) || filters.category === category
+                  (category === t('products.all') && !filters.category) || filters.category === category
                     ? 'bg-green-600 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
                 }`}
@@ -206,7 +210,7 @@ export function Products() {
             <form onSubmit={handlePriceFilter} className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-end gap-4">
                 <Input
-                  label="Min Price"
+                  label={t('products.minPrice')}
                   type="number"
                   name="minPrice"
                   defaultValue={filters.minPrice}
@@ -214,14 +218,14 @@ export function Products() {
                   className="w-32"
                 />
                 <Input
-                  label="Max Price"
+                  label={t('products.maxPrice')}
                   type="number"
                   name="maxPrice"
                   defaultValue={filters.maxPrice}
                   placeholder="1000"
                   className="w-32"
                 />
-                <Button type="submit">Apply</Button>
+                <Button type="submit">{t('products.apply')}</Button>
                 <Button
                   type="button"
                   variant="ghost"
@@ -230,7 +234,7 @@ export function Products() {
                     setCurrentPage(1);
                   }}
                 >
-                  Clear
+                  {t('products.clear')}
                 </Button>
               </div>
             </form>
@@ -265,27 +269,27 @@ export function Products() {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  {t('products.previous')}
                 </Button>
                 <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
-                  Page {currentPage} of {totalPages}
+                  {t('products.page', { current: currentPage, total: totalPages })}
                 </span>
                 <Button
                   variant="outline"
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  {t('products.next')}
                 </Button>
               </div>
             )}
           </>
         ) : (
           <EmptyState
-            title="No products found"
-            description="Try adjusting your filters or search for something else"
+            title={t('products.noProducts')}
+            description={t('products.noProductsDesc')}
             action={{
-              label: "Clear Filters",
+              label: t('products.clearFilters'),
               onClick: () => {
                 setFilters({});
                 setSearchParams(new URLSearchParams());

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
@@ -8,13 +9,14 @@ import { useCart } from '../../../features/cart/context/CartContext';
 import { useToast } from '../../../utils/ToastContext';
 import { orderService } from '../../../features/cart/services/orderService';
 
-const paymentMethods = [
-  { value: 'card', label: 'Credit/Debit Card' },
-  { value: 'cod', label: 'Cash on Delivery' },
-  { value: 'upi', label: 'UPI' },
-];
 
 export function Checkout() {
+  const { t } = useTranslation();
+  const paymentMethods = [
+    { value: 'card', label: t('checkout.card') },
+    { value: 'cod', label: t('checkout.cod') },
+    { value: 'upi', label: t('checkout.upi') },
+  ];
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
@@ -43,12 +45,12 @@ export function Checkout() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.address.trim()) newErrors.address = 'Delivery address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state.trim()) newErrors.state = 'State is required';
-    if (!formData.zipCode.trim()) newErrors.zipCode = 'ZIP code is required';
+    if (!formData.fullName.trim()) newErrors.fullName = t('checkout.fullName') + ' is required';
+    if (!formData.phone.trim()) newErrors.phone = t('checkout.phone') + ' is required';
+    if (!formData.address.trim()) newErrors.address = t('checkout.address') + ' is required';
+    if (!formData.city.trim()) newErrors.city = t('checkout.city') + ' is required';
+    if (!formData.state.trim()) newErrors.state = t('checkout.state') + ' is required';
+    if (!formData.zipCode.trim()) newErrors.zipCode = t('checkout.zipCode') + ' is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -80,12 +82,12 @@ export function Checkout() {
         paymentMethod: formData.paymentMethod,
       });
 
-      showToast('Order placed successfully!', 'success');
+      showToast(t('checkout.orderSuccess') || 'Order placed successfully!', 'success');
       clearCart();
       navigate('/orders');
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : 'Failed to place order',
+        error instanceof Error ? error.message : (t('checkout.orderFailed') || 'Failed to place order'),
         'error'
       );
     } finally {
@@ -97,7 +99,7 @@ export function Checkout() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-          Checkout
+          {t('checkout.title')}
         </h1>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -107,12 +109,12 @@ export function Checkout() {
               {/* Delivery Information */}
               <Card padding="lg">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                  Delivery Information
+                  {t('checkout.deliveryInfo')}
                 </h2>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   <Input
-                    label="Full Name"
+                    label={t('checkout.fullName')}
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleChange}
@@ -120,7 +122,7 @@ export function Checkout() {
                     required
                   />
                   <Input
-                    label="Phone Number"
+                    label={t('checkout.phone')}
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
@@ -131,7 +133,7 @@ export function Checkout() {
 
                 <div className="mt-4">
                   <Input
-                    label="Street Address"
+                    label={t('checkout.address')}
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
@@ -142,7 +144,7 @@ export function Checkout() {
 
                 <div className="grid md:grid-cols-3 gap-4 mt-4">
                   <Input
-                    label="City"
+                    label={t('checkout.city')}
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
@@ -150,7 +152,7 @@ export function Checkout() {
                     required
                   />
                   <Input
-                    label="State"
+                    label={t('checkout.state')}
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
@@ -158,7 +160,7 @@ export function Checkout() {
                     required
                   />
                   <Input
-                    label="ZIP Code"
+                    label={t('checkout.zipCode')}
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleChange}
@@ -171,10 +173,10 @@ export function Checkout() {
               {/* Payment Method */}
               <Card padding="lg">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                  Payment Method
+                  {t('checkout.payment')}
                 </h2>
                 <Select
-                  label="Select Payment Method"
+                  label={t('checkout.payment')}
                   name="paymentMethod"
                   value={formData.paymentMethod}
                   onChange={handleChange}
@@ -241,16 +243,16 @@ export function Checkout() {
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                  <span>Subtotal</span>
+                  <span>{t('checkout.deliveryInfo') ? t('cart.subtotal', { count: items.length }) : 'Subtotal'}</span>
                   <span>₹{totalPrice.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                  <span>Delivery Fee</span>
-                  <span>{deliveryFee === 0 ? 'Free' : `₹${deliveryFee.toLocaleString('en-IN')}`}</span>
+                  <span>{t('cart.deliveryFee')}</span>
+                  <span>{deliveryFee === 0 ? t('cart.free') : `₹${deliveryFee.toLocaleString('en-IN')}`}</span>
                 </div>
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                   <div className="flex justify-between text-xl font-bold text-gray-900 dark:text-white">
-                    <span>Total</span>
+                    <span>{t('cart.total')}</span>
                     <span>₹{finalTotal.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
@@ -266,12 +268,12 @@ export function Checkout() {
                   isLoading={isLoading}
                   onClick={handleSubmit}
                 >
-                  Place Order
+                  {t('checkout.placeOrder')}
                 </Button>
               </div>
 
               <p className="mt-4 text-xs text-center text-gray-500 dark:text-gray-400">
-                By placing this order, you agree to our Terms of Service
+                {t('checkout.terms')}
               </p>
             </Card>
           </div>

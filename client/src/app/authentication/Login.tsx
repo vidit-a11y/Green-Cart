@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../features/auth/context/AuthContext';
 import { useToast } from '../../utils/ToastContext';
 
 export function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -22,15 +24,15 @@ export function Login() {
     const newErrors: Record<string, string> = {};
     
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('auth.login.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('auth.login.emailInvalid');
     }
     
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('auth.login.passwordRequired');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('auth.login.passwordMin');
     }
     
     setErrors(newErrors);
@@ -45,13 +47,13 @@ export function Login() {
     setIsLoading(true);
     try {
       await login(formData.email, formData.password);
-      showToast('Welcome back!', 'success');
+      showToast(t('auth.login.welcome'), 'success');
       
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : 'Invalid email or password',
+        error instanceof Error ? error.message : t('auth.login.invalidCredentials'),
         'error'
       );
     } finally {
@@ -78,33 +80,33 @@ export function Login() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Welcome Back
+              {t('auth.login.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Sign in to access your account
+              {t('auth.login.subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Email"
+              label={t('auth.login.email')}
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder={t('auth.login.emailPlaceholder')}
               error={errors.email}
               autoComplete="email"
               required
             />
 
             <Input
-              label="Password"
+              label={t('auth.login.password')}
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter your password"
+              placeholder={t('auth.login.passwordPlaceholder')}
               error={errors.password}
               autoComplete="current-password"
               required
@@ -117,14 +119,14 @@ export function Login() {
                   className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Remember me
+                  {t('auth.login.rememberMe')}
                 </span>
               </label>
               <Link
                 to="/forgot-password"
                 className="text-sm text-green-600 dark:text-green-400 hover:text-green-700"
               >
-                Forgot password?
+                {t('auth.login.forgotPassword')}
               </Link>
             </div>
 
@@ -134,26 +136,26 @@ export function Login() {
               isLoading={isLoading}
               size="lg"
             >
-              Sign In
+              {t('auth.login.submit')}
             </Button>
 
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
+              {t('auth.login.noAccount')}{' '}
               <Link
                 to="/register"
                 className="text-green-600 dark:text-green-400 font-medium hover:text-green-700"
               >
-                Sign up
+                {t('auth.login.signUp')}
               </Link>
             </p>
           </div>
 
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-              By signing in, you agree to our Terms of Service and Privacy Policy
+              {t('auth.login.terms')}
             </p>
           </div>
         </div>
