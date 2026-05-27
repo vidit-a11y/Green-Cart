@@ -1,19 +1,22 @@
-import { Request, Response } from 'express';
-import cloudinary from '../config/cloudinary.js';
+import type { Request, Response } from 'express';
+import { uploadToCloudinary } from '../services/uploadService.js';
+import { sendError, sendSuccess } from '../utils/response.utils.js';
 
-export const uploadImage = async (req: Request, res: Response) => {
+/**
+ * Upload Controller — HTTP Layer Only
+ *
+ * Delegates actual upload logic to uploadService.ts
+ */
+export const uploadImage = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      res.status(400).json({ message: 'No file uploaded' });
+      sendError(res, 'No file uploaded', 400);
       return;
     }
 
-    const result = await cloudinary.uploader.upload(req.file.path);
-
-    res.json({
-      imageUrl: result.secure_url
-    });
+    const imageUrl = await uploadToCloudinary(req.file.path);
+    sendSuccess(res, { imageUrl });
   } catch (error) {
-    res.status(500).json({ message: 'Upload failed' });
+    sendError(res, 'Upload failed');
   }
 };

@@ -7,6 +7,7 @@ import { ToastProvider } from './utils/ToastContext.tsx'
 import './i18n'
 import './index.css'
 
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>

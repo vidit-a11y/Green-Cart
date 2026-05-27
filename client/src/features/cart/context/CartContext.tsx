@@ -21,7 +21,6 @@ function getStoredCart(): CartItem[] {
     const stored = localStorage.getItem(CART_STORAGE_KEY);
     if (!stored) return [];
     const parsed: CartItem[] = JSON.parse(stored);
-    // Clear stale cart items where product.id is missing (old _id-only data)
     const valid = parsed.filter((item) => !!item.product?.id);
     if (valid.length !== parsed.length) {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(valid));

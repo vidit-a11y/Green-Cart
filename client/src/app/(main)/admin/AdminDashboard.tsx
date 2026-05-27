@@ -42,7 +42,7 @@ export function AdminDashboard() {
       const categories = await productService.getCategories();
       const activeProducts = productsData.data.filter((p) => p.isAvailable).length;
 
-      // Calculate revenue from recent orders
+
       const recentOrders = await orderService.getAllOrders(1, 100);
       const revenue = recentOrders.data
         .filter((o) => o.status !== 'cancelled')

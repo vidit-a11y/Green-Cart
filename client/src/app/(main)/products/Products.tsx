@@ -59,6 +59,7 @@ export function Products() {
       setProducts(response.data);
       setTotalPages(response.totalPages);
     } catch (error) {
+      console.error(error);
       showToast(t('common.error'), 'error');
     } finally {
       setIsLoading(false);

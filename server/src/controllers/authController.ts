@@ -1,166 +1,73 @@
-import bcrypt from 'bcryptjs';
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { User } from '../models/User.js';
+import type { Request, Response } from 'express';
+import * as authService from '../services/authService.js';
+import { generateToken } from '../utils/jwt.utils.js';
+import { sendError, sendSuccess } from '../utils/response.utils.js';
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
+/**
+ * Auth Controller — HTTP Layer Only
+ *
+ * Controllers are THIN. They:
+ * 1. Extract data from req (body, params, query)
+ * 2. Call the service layer
+ * 3. Send the HTTP response
+ *
+ * Controllers do NOT contain business logic.
+ * Business logic lives in services/authService.ts
+ */
 
-
-const generateToken = (userId: string) => {
-  return jwt.sign(
-    { id: userId }, 
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-};
-
-
-const safeUser = (user: any) => ({
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  phone: user.phone,
-  address: user.address,
-  avatar: user.avatar,
-  createdAt: user.createdAt,
-});
-
-
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, role, phone, address } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || 'consumer',
-      phone,
-      address,
-    });
-
-    const token = generateToken(user._id.toString());
-
-    res.status(201).json({
-      success: true,
-      data: { user: safeUser(user), token },
-    });
-
+    const result = await authService.registerUser({ name, email, password, role, phone, address });
+    sendSuccess(res, result, 201);
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, message: 'Error registering user' });
+    const message = error instanceof Error ? error.message : 'Error registering user';
+    const status = message === 'Email already registered' ? 400 : 500;
+    sendError(res, message, status);
   }
 };
 
-
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Missing credentials' });
-    }
-
-    // IMPORTANT: include password if you later use select:false
-    const user = await User.findOne({ email });
-
-    if (!user || !user.password) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const isValid = await bcrypt.compare(password, user.password);
-
-    if (!isValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const token = generateToken(user._id.toString());
-
-    res.json({
-      success: true,
-      data: { user: safeUser(user), token },
-    });
-
+    const result = await authService.loginUser(email, password);
+    sendSuccess(res, result);
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Error logging in' });
+    const message = error instanceof Error ? error.message : 'Error logging in';
+    const status = message === 'Invalid credentials' ? 401 : 500;
+    sendError(res, message, status);
   }
 };
 
-
-export const googleCallback = async (req: Request, res: Response) => {
+export const googleCallback = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = (req as any).user;
-
     const token = generateToken(user._id.toString());
-
-    const redirectUrl = `${
-      process.env.CLIENT_URL || 'http://localhost:5173'
-    }/auth/callback?token=${token}`;
-
+    const redirectUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`;
     res.redirect(redirectUrl);
-
-  } catch (error) {
-    res.redirect(
-      `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=auth_failed`
-    );
+  } catch {
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=auth_failed`);
   }
 };
 
-
-export const getCurrentUser = async (req: Request, res: Response) => {
+export const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
-
-    const user = await User.findById(userId).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({ success: true, data: user });
-
+    const user = await authService.getUserById(userId);
+    sendSuccess(res, user);
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error fetching user' });
+    const message = error instanceof Error ? error.message : 'Error fetching user';
+    sendError(res, message, message === 'User not found' ? 404 : 500);
   }
 };
 
-
-export const updateProfile = async (req: Request, res: Response) => {
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
-    const updates = req.body;
-
-    // prevent sensitive updates
-    delete updates.password;
-    delete updates.googleId;
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      updates,
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({ success: true, data: user });
-
+    const user = await authService.updateUserProfile(userId, req.body);
+    sendSuccess(res, user);
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error updating profile' });
+    const message = error instanceof Error ? error.message : 'Error updating profile';
+    sendError(res, message, 500);
   }
 };
