@@ -4,6 +4,7 @@ import App from './App.tsx'
 import { AuthProvider } from './features/auth/context/AuthContext.tsx'
 import { CartProvider } from './features/cart/context/CartContext.tsx'
 import { ToastProvider } from './utils/ToastContext.tsx'
+import './utils/fixLeafletIcons'
 import './i18n'
 import './index.css'
 

@@ -33,7 +33,7 @@ export const validateProductInput = (body: Record<string, unknown>): ValidationR
 
 export const validateOrderInput = (body: Record<string, unknown>): ValidationResult => {
   const errors: string[] = [];
-  const { items, deliveryAddress, paymentMethod } = body;
+  const { items, deliveryAddress, paymentMethod, customerLocation, customerLat, customerLng } = body;
 
   if (!items || !Array.isArray(items) || (items as unknown[]).length === 0) {
     errors.push('Order must contain at least one item');
@@ -52,6 +52,25 @@ export const validateOrderInput = (body: Record<string, unknown>): ValidationRes
 
   if (!paymentMethod || typeof paymentMethod !== 'string') {
     errors.push('Payment method is required');
+  }
+
+  // Accept GeoJSON { customerLocation: { coordinates: [lng, lat] } }
+  //    OR flat    { customerLat, customerLng }
+  const hasGeoPoint = (() => {
+    const coords = (customerLocation as { coordinates?: unknown } | undefined)?.coordinates;
+    if (!Array.isArray(coords) || coords.length !== 2) return false;
+    return coords.every((v) => Number.isFinite(Number(v)));
+  })();
+
+  const hasFlatCoords = (() => {
+    if (customerLat === undefined || customerLng === undefined) return false;
+    return Number.isFinite(Number(customerLat)) && Number.isFinite(Number(customerLng));
+  })();
+
+  if (!hasGeoPoint && !hasFlatCoords) {
+    errors.push(
+      'Customer GPS location is required — send customerLocation: { coordinates: [lng, lat] } or customerLat + customerLng'
+    );
   }
 
   return { valid: errors.length === 0, errors };

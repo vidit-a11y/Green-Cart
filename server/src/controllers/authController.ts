@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import * as authService from '../services/authService.js';
+import { User } from '../models/User.js';
 import { generateToken } from '../utils/jwt.utils.js';
 import { sendError, sendSuccess } from '../utils/response.utils.js';
 
@@ -17,8 +18,8 @@ import { sendError, sendSuccess } from '../utils/response.utils.js';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role, phone, address } = req.body;
-    const result = await authService.registerUser({ name, email, password, role, phone, address });
+    const { name, email, password, role, phone, address, location } = req.body;
+    const result = await authService.registerUser({ name, email, password, role, phone, address, location });
     sendSuccess(res, result, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error registering user';
@@ -68,6 +69,44 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     sendSuccess(res, user);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error updating profile';
+    sendError(res, message, 400);
+  }
+};
+
+export const updateMyLocation = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId;
+    const { coordinates } = req.body;
+
+    if (
+      !Array.isArray(coordinates) ||
+      coordinates.length !== 2 ||
+      !coordinates.every((c) => typeof c === 'number' && Number.isFinite(c))
+    ) {
+      sendError(res, 'coordinates must be [longitude, latitude] as finite numbers', 400);
+      return;
+    }
+
+    const [lng, lat] = coordinates as [number, number];
+    if (lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+      sendError(res, 'coordinates out of valid range', 400);
+      return;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { location: { type: 'Point', coordinates: [lng, lat] } },
+      { new: true, select: '-password' }
+    );
+
+    if (!user) {
+      sendError(res, 'User not found', 404);
+      return;
+    }
+
+    sendSuccess(res, user);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error updating location';
     sendError(res, message, 500);
   }
 };

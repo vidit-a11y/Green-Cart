@@ -1,5 +1,10 @@
 export type UserRole = 'farmer' | 'consumer' | 'admin';
 
+export interface GeoPoint {
+  type: 'Point';
+  coordinates: [number, number];
+}
+
 export interface User {
   id: string;
   name: string;
@@ -7,7 +12,20 @@ export interface User {
   role: UserRole;
   phone?: string;
   address?: string;
+  location?: GeoPoint;
+  savedAddresses?: SavedAddress[];
   createdAt: string;
+}
+
+export interface SavedAddress {
+  _id?: string;
+  label: 'Home' | 'Work' | 'Other';
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  coordinates: [number, number]; // [lng, lat]
+  isDefault: boolean;
 }
 
 export interface RegisterData {
@@ -17,6 +35,7 @@ export interface RegisterData {
   role: UserRole;
   phone?: string;
   address?: string;
+  location?: GeoPoint;
 }
 
 export interface LoginData {
@@ -25,6 +44,7 @@ export interface LoginData {
 }
 
 export interface Product {
+  _id?: string;
   id: string;
   name: string;
   description: string;
@@ -33,9 +53,11 @@ export interface Product {
   category: string;
   unit: string;
   images: string[];
+  imageUrl?: string;
   farmerId: string;
   farmerName?: string;
   location: string;
+  geoLocation?: GeoPoint;
   isAvailable: boolean;
   rating?: number;
   reviewsCount?: number;
@@ -50,7 +72,8 @@ export interface ProductFormData {
   quantity: number;
   category: string;
   unit: string;
-  images?: string[];
+  images: string[];
+  imageUrl?: string;
   location: string;
   isAvailable: boolean;
 }
@@ -81,16 +104,51 @@ export interface OrderItem {
 }
 
 export interface Order {
+  _id?: string;
   id: string;
   consumerId: string;
   farmerId: string;
+  farmerName?: string;
   items: OrderItem[];
+  subtotalAmount: number;
+  deliveryFee: number;
   totalAmount: number;
+  distanceKm?: number;
+  deliveryDistanceKm?: number;
+  farmerLocationLabel?: string;
+  customerLocation?: GeoPoint;
+  farmerLocation?: GeoPoint;
+  minimumOrderMet: boolean;
+  porterOrderId?: string;
+  porterTrackingUrl?: string;
+  deliveryStatus:
+    | 'pending'
+    | 'farmer_accepted'
+    | 'porter_assigned'
+    | 'picked_up'
+    | 'in_transit'
+    | 'delivered';
+  deliveryPartnerName?: string;
+  deliveryPartnerPhone?: string;
+  estimatedDeliveryTime?: string;
   status: OrderStatus;
   deliveryAddress: string;
   paymentMethod: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DeliveryQuote {
+  farmerId: string;
+  farmerName: string;
+  farmerLocation: string;
+  farmerCoordinates: [number, number];
+  distanceKm: number;
+  deliveryFee: number;
+  subtotalAmount: number;
+  totalAmount: number;
+  minimumOrderMet: boolean;
+  withinServiceArea: boolean;
 }
 
 export interface ProductFilters {

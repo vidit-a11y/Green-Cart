@@ -4,6 +4,7 @@ import passport from 'passport';
 import { env } from './env.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import authRoutes from './routes/authRoutes.js';
+import locationRoutes from './routes/location.routes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/location', locationRoutes);
 app.use('/api/users', userRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────

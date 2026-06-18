@@ -3,9 +3,13 @@ import api from '../../../lib/api';
 
 // MongoDB returns _id — normalize it to id so cart identity works correctly
 function normalizeProduct(raw: any): Product {
+  const imageUrl = raw.imageUrl ?? raw.images?.[0];
   return {
     ...raw,
     id: raw._id ?? raw.id,
+    location: typeof raw.location === 'string' ? raw.location : raw.locationLabel ?? '',
+    imageUrl,
+    images: raw.images?.length ? raw.images : imageUrl ? [imageUrl] : [],
   };
 }
 
@@ -40,17 +44,17 @@ export const productService = {
 
   async getByFarmer(farmerId: string): Promise<Product[]> {
     const response = await api.get<ApiResponse<Product[]>>(`/products/farmer/${farmerId}`);
-    return response.data.data;
+    return response.data.data.map(normalizeProduct);
   },
 
-  async create(data: ProductFormData): Promise<Product> {
+  async create(data: ProductFormData | FormData): Promise<Product> {
     const response = await api.post<ApiResponse<Product>>('/products', data);
-    return response.data.data;
+    return normalizeProduct(response.data.data);
   },
 
-  async update(id: string, data: Partial<ProductFormData>): Promise<Product> {
+  async update(id: string, data: Partial<ProductFormData> | FormData): Promise<Product> {
     const response = await api.put<ApiResponse<Product>>(`/products/${id}`, data);
-    return response.data.data;
+    return normalizeProduct(response.data.data);
   },
 
   async delete(id: string): Promise<void> {

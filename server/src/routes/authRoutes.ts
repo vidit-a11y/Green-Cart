@@ -6,6 +6,7 @@ import {
   googleCallback,
   login,
   register,
+  updateMyLocation,
   updateProfile,
 } from '../controllers/authController.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
@@ -84,6 +85,7 @@ router.post('/register', validateRegister, register);
 router.post('/login', validateLogin, login);
 router.get('/me', authenticateToken, getCurrentUser);
 router.put('/profile', authenticateToken, updateProfile);
+router.patch('/me/location', authenticateToken, updateMyLocation);
 
 // Google OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

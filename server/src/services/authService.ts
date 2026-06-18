@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
+import { Product } from '../models/Product.js';
 import { User } from '../models/User.js';
 import { generateToken } from '../utils/jwt.utils.js';
 import { safeUser } from '../utils/response.utils.js';
+import { normalizeCoordinates, toGeoPoint } from './deliveryService.js';
 
 /**
  * Auth Service — Business Logic Layer
@@ -23,6 +25,7 @@ export const registerUser = async (data: {
   role?: string;
   phone?: string;
   address?: string;
+  location?: { coordinates: [number, number] };
 }) => {
   const existing = await User.findOne({ email: data.email.toLowerCase() });
   if (existing) {
@@ -30,6 +33,7 @@ export const registerUser = async (data: {
   }
 
   const hashedPassword = await bcrypt.hash(data.password, 10);
+  const coordinates = normalizeCoordinates(data.location);
 
   const user = await User.create({
     name: data.name,
@@ -38,6 +42,7 @@ export const registerUser = async (data: {
     role: data.role || 'consumer',
     phone: data.phone,
     address: data.address,
+    ...(coordinates ? { location: toGeoPoint(coordinates) } : {}),
   });
 
   const token = generateToken(user._id.toString());
@@ -72,7 +77,41 @@ export const updateUserProfile = async (userId: string, updates: Record<string, 
   delete updates.googleId;
   delete updates.role; // role changes should go through admin endpoint only
 
+  // ── Normalize location input ──────────────────────────────────────────────
+  // Accept both:
+  //   a) Flat:   { lat: 18.52, lng: 73.85 }
+  //   b) GeoJSON: { location: { type: 'Point', coordinates: [lng, lat] } }
+  if (
+    updates.lat !== undefined &&
+    updates.lng !== undefined &&
+    updates.location === undefined
+  ) {
+    const lat = Number(updates.lat);
+    const lng = Number(updates.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      updates.location = { type: 'Point', coordinates: [lng, lat] };
+    }
+    delete updates.lat;
+    delete updates.lng;
+  }
+
+  const coordinates = normalizeCoordinates(updates.location);
+  if (updates.location !== undefined) {
+    if (!coordinates) {
+      throw new Error('Valid location coordinates are required');
+    }
+    updates.location = toGeoPoint(coordinates);
+  }
+
   const user = await User.findByIdAndUpdate(userId, updates, { new: true }).select('-password');
   if (!user) throw new Error('User not found');
+
+  if (coordinates && user.role === 'farmer') {
+    await Product.updateMany(
+      { farmerId: userId },
+      { $set: { geoLocation: toGeoPoint(coordinates) } }
+    );
+  }
+
   return user;
 };

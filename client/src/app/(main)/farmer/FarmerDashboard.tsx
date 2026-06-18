@@ -14,7 +14,7 @@ export function FarmerDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { showToast } = useToast();
-  
+
   const [stats, setStats] = useState({
     totalProducts: 0,
     activeProducts: 0,
@@ -35,20 +35,23 @@ export function FarmerDashboard() {
         orderService.getFarmerOrders(1, 5),
       ]);
 
-      setRecentProducts(productsData.slice(0, 4));
-      setRecentOrders(ordersData.data);
+      const products = productsData ?? [];
+      const orders = ordersData.data ?? [];
+
+      setRecentProducts(products.slice(0, 4));
+      setRecentOrders(orders);
       
     
-      const activeProducts = productsData.filter((p) => p.isAvailable).length;
-      const pendingOrders = ordersData.data.filter((o) => o.status === 'pending').length;
-      const totalRevenue = ordersData.data
+      const activeProducts = products.filter((p) => p.isAvailable).length;
+      const pendingOrders = orders.filter((o) => o.status === 'pending').length;
+      const totalRevenue = orders
         .filter((o) => o.status !== 'cancelled')
-        .reduce((sum, o) => sum + o.totalAmount, 0);
+        .reduce((sum, o) => sum + (o.totalAmount ?? 0), 0);
 
       setStats({
-        totalProducts: productsData.length,
+        totalProducts: products.length,
         activeProducts,
-        totalOrders: ordersData.total,
+        totalOrders: ordersData.total ?? orders.length,
         pendingOrders,
         totalRevenue,
       });
@@ -67,18 +70,43 @@ export function FarmerDashboard() {
     return <LoadingSpinner fullScreen text="Loading dashboard..." />;
   }
 
+  const hasLocation = !!(user?.location?.coordinates?.[0] || user?.location?.coordinates?.[1]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('farmer.dashboard.title')}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {t('farmer.dashboard.welcome', { name: user?.name })}
-          </p>
+        <div className="mb-8 flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {t('farmer.dashboard.title')}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t('farmer.dashboard.welcome', { name: user?.name })}
+            </p>
+          </div>
+          <Link to="/farmer/settings" className="hidden sm:inline-flex px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-medium transition-colors">
+            ⚙️ Settings
+          </Link>
         </div>
+
+        {/* Location Notice */}
+        {!hasLocation && (
+          <div className="mb-6 flex items-start gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
+            <span className="text-lg mt-0.5">⚠️</span>
+            <div>
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                Action Required: Set Your Farm Location
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Customers can only find your products and calculate delivery fees if your location is set.
+              </p>
+            </div>
+            <Link to="/farmer/settings" className="ml-auto mt-1 shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
+              Set Now
+            </Link>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -157,9 +185,9 @@ export function FarmerDashboard() {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Recent Orders */}
-          <Card padding="md">
+          <Card padding="md" className="w-full lg:w-1/2">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('farmer.dashboard.recentOrders')}</h2>
               <Link to="/farmer/orders" className="text-green-600 hover:text-green-700 text-sm font-medium">
@@ -167,24 +195,24 @@ export function FarmerDashboard() {
               </Link>
             </div>
             
-            {recentOrders.length > 0 ? (
+            {(recentOrders ?? []).length > 0 ? (
               <div className="space-y-3">
-                {recentOrders.map((order) => (
+                {(recentOrders ?? []).map((order) => (
                   <div
-                    key={order.id}
+                    key={order.id ?? order.createdAt}
                     className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                   >
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
-                        Order #{order.id.slice(-6)}
+                        Order #{(order.id ?? '').slice(-6) || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(order.createdAt).toLocaleDateString()}
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        ₹{order.totalAmount.toLocaleString('en-IN')}
+                        ₹{(order.totalAmount ?? 0).toLocaleString('en-IN')}
                       </p>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
@@ -193,7 +221,7 @@ export function FarmerDashboard() {
                         order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Unknown'}
                       </span>
                     </div>
                   </div>
@@ -207,7 +235,7 @@ export function FarmerDashboard() {
           </Card>
 
           {/* Recent Products */}
-          <Card padding="md">
+          <Card padding="md" className="w-full lg:w-1/2">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('farmer.dashboard.yourProducts')}</h2>
               <Link to="/farmer/products" className="text-green-600 hover:text-green-700 text-sm font-medium">
@@ -215,11 +243,11 @@ export function FarmerDashboard() {
               </Link>
             </div>
             
-            {recentProducts.length > 0 ? (
+            {(recentProducts ?? []).length > 0 ? (
               <div className="space-y-3">
-                {recentProducts.map((product) => (
+                {(recentProducts ?? []).map((product) => (
                   <div
-                    key={product.id}
+                    key={product.id ?? product.name}
                     className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                   >
                     <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
@@ -230,7 +258,7 @@ export function FarmerDashboard() {
                         {product.name}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        ₹{product.price.toLocaleString('en-IN')}/{product.unit} • {product.quantity} {t('farmer.dashboard.inStock')}
+                        ₹{(product.price ?? 0).toLocaleString('en-IN')}/{product.unit} • {product.quantity ?? 0} {t('farmer.dashboard.inStock')}
                       </p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full ${

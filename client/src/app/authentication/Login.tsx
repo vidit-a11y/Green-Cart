@@ -46,11 +46,13 @@ export function Login() {
     
     setIsLoading(true);
     try {
-      await login(formData.email, formData.password);
+      const user = await login(formData.email, formData.password);
       showToast(t('auth.login.welcome'), 'success');
       
       const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-      navigate(from, { replace: true });
+      const redirectTo =
+        user.role === 'farmer' ? '/farmer' : user.role === 'consumer' ? '/' : from;
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       showToast(
         error instanceof Error ? error.message : t('auth.login.invalidCredentials'),

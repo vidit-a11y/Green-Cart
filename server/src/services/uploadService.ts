@@ -1,4 +1,4 @@
-import cloudinary from '../config/cloudinary.js';
+import cloudinary from '../config/cloudinary.config.js';
 
 /**
  * Upload Service — Business Logic Layer

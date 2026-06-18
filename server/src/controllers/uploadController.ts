@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import { uploadToCloudinary } from '../services/uploadService.js';
 import { sendError, sendSuccess } from '../utils/response.utils.js';
 
 /**
@@ -14,7 +13,7 @@ export const uploadImage = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const imageUrl = await uploadToCloudinary(req.file.path);
+    const imageUrl = req.file.path;
     sendSuccess(res, { imageUrl });
   } catch (error) {
     sendError(res, 'Upload failed');

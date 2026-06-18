@@ -1,68 +1,122 @@
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
+import { User } from '../models/User.js';
+import {
+  buildDeliveryQuote,
+  MIN_ORDER_VALUE,
+  normalizeCoordinates,
+  toGeoPoint,
+} from './deliveryService.js';
+import { createPorterOrder, getPorterQuote } from './porter.service.js';
 
-/**
- * Order Service — Business Logic Layer
- *
- * Handles the complete order lifecycle:
- * create → confirm → ship → deliver / cancel
- *
- * This is the most complex service because it touches both
- * Product (to get names/prices) and Order collections.
- */
+/** Explicit fee rule per Step 3: free within 7.5 km, ₹50 beyond */
+const calcDeliveryFee = (distanceKm: number): number => (distanceKm <= 7.5 ? 0 : 50);
 
 interface CreateOrderData {
   consumerId: string;
   items: { productId: string; quantity: number }[];
   deliveryAddress: string;
   paymentMethod: string;
+  customerLocation: { coordinates: [number, number] };
 }
 
-export const createOrder = async (data: CreateOrderData) => {
-  const { consumerId, items, deliveryAddress, paymentMethod } = data;
+const parseDeliveryContact = (deliveryAddress: string) => {
+  const lines = deliveryAddress
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-  // Fetch all products in one query (efficient — no N+1 problem)
-  const productIds = items.map((i) => i.productId);
+  const phoneMatch = deliveryAddress.match(/Phone:\s*([+\d\s-]+)/i);
+
+  return {
+    name: lines[0] || 'Customer',
+    phone: phoneMatch?.[1]?.trim() || '',
+  };
+};
+
+const buildItemDescription = (items: { productName: string; quantity: number; unit: string }[]) =>
+  items.map((item) => `${item.productName} x${item.quantity} ${item.unit}`).join(', ');
+
+export const createOrder = async (data: CreateOrderData) => {
+  const { consumerId, items, deliveryAddress, paymentMethod, customerLocation } = data;
+  const normalizedCoords = normalizeCoordinates(customerLocation);
+
+  if (!normalizedCoords) {
+    throw new Error('Valid customer coordinates are required');
+  }
+
+  const productIds = items.map((item) => item.productId);
   const products = await Product.find({ _id: { $in: productIds } });
 
   if (products.length !== items.length) {
     throw new Error('One or more products not found');
   }
 
-  // Build order items with product details (snapshot pricing)
   const orderItems = items.map((item) => {
-    const product = products.find((p) => p._id.toString() === item.productId);
+    const product = products.find((entry) => entry._id?.toString() === item.productId);
     if (!product) throw new Error(`Product ${item.productId} not found`);
     if (!product.isAvailable) throw new Error(`${product.name} is not available`);
 
     return {
       productId: item.productId,
       productName: product.name,
-      price: product.price, // snapshot — price at time of order
+      price: product.price,
       quantity: item.quantity,
       unit: product.unit,
     };
   });
 
-  const totalAmount = orderItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  // Minimum order guard — explicit check per Step 3 spec
+  const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  if (subtotal < MIN_ORDER_VALUE) {
+    throw new Error(`Minimum order ₹${MIN_ORDER_VALUE} required`);
+  }
+
+  const quote = await buildDeliveryQuote(normalizedCoords, items);
+  const porterQuote = await getPorterQuote(quote.farmerCoordinates, normalizedCoords);
+  const estimatedDeliveryTime = new Date(
+    Date.now() + Math.max(45, porterQuote.etaMinutes || Math.ceil(quote.distanceKm * 12)) * 60 * 1000
   );
 
-  // Determine farmerId from first product (simplified — real app would split by farmer)
-  const farmerId = products[0]?.farmerId;
+  // Explicit delivery fee override per Step 3 spec
+  const deliveryFee = calcDeliveryFee(quote.distanceKm);
+  const totalAmount = quote.subtotalAmount + deliveryFee;
 
   const order = await Order.create({
     consumerId,
-    farmerId,
+    farmerId: quote.farmerId,
+    farmerName: quote.farmerName,
     items: orderItems,
+    subtotalAmount: quote.subtotalAmount,
+    deliveryFee,
     totalAmount,
+    distanceKm: quote.distanceKm,
+    deliveryDistanceKm: quote.distanceKm,
+    farmerLocationLabel: quote.farmerLocation,
+    customerLocation: toGeoPoint(normalizedCoords),
+    farmerLocation: toGeoPoint(quote.farmerCoordinates),
+    minimumOrderMet: quote.minimumOrderMet,
+    deliveryStatus: 'pending',
+    estimatedDeliveryTime,
     deliveryAddress,
     paymentMethod,
     status: 'pending',
   });
 
   return order;
+};
+
+export const getDeliveryQuote = async (
+  items: { productId: string; quantity: number }[],
+  customerLocation: { coordinates: [number, number] }
+) => {
+  const normalizedCoords = normalizeCoordinates(customerLocation);
+
+  if (!normalizedCoords) {
+    throw new Error('Valid customer coordinates are required');
+  }
+
+  return buildDeliveryQuote(normalizedCoords, items);
 };
 
 export const getOrdersByConsumer = async (consumerId: string, page = 1, limit = 10) => {
@@ -107,9 +161,80 @@ export const updateOrderStatus = async (
   const order = await Order.findById(id);
   if (!order) throw new Error('Order not found');
 
-  // Only the farmer or admin can update status
   if (requesterRole !== 'admin' && order.farmerId !== requesterId) {
     throw new Error('Not authorized to update this order');
+  }
+
+  if (status === 'confirmed') {
+    if (!order.customerLocation?.coordinates) {
+      throw new Error('Customer delivery location is missing');
+    }
+
+    const farmer = order.farmerId
+      ? await User.findById(order.farmerId).select('name phone address location')
+      : null;
+    const consumer = await User.findById(order.consumerId).select('name phone address');
+
+    const farmerCoords = order.farmerLocation?.coordinates || farmer?.location?.coordinates;
+    if (!farmer || !farmerCoords) {
+      throw new Error('Farmer location is missing');
+    }
+
+    if (order.porterOrderId) {
+      order.status = 'confirmed';
+      order.deliveryStatus = order.deliveryStatus === 'pending' ? 'porter_assigned' : order.deliveryStatus;
+      await order.save();
+      return order;
+    }
+
+    const deliveryContact = parseDeliveryContact(order.deliveryAddress);
+    const porterOrder = await createPorterOrder({
+      orderId: order.id || order._id!.toString(),
+      pickupAddress: order.farmerLocationLabel || farmer.address || 'Farmer pickup location',
+      pickupCoords: farmerCoords,
+      pickupContactName: farmer.name,
+      pickupContactPhone: farmer.phone || '',
+      dropAddress: order.deliveryAddress,
+      dropCoords: order.customerLocation.coordinates,
+      dropContactName: consumer?.name || deliveryContact.name,
+      dropContactPhone: consumer?.phone || deliveryContact.phone,
+      itemDescription: buildItemDescription(order.items),
+      orderValue: order.totalAmount,
+    });
+
+    order.porterOrderId = porterOrder.porterOrderId;
+    order.porterTrackingUrl = porterOrder.trackingUrl;
+    order.deliveryPartnerName = porterOrder.driverName;
+    order.deliveryPartnerPhone = porterOrder.driverPhone;
+    order.estimatedDeliveryTime = porterOrder.etaMinutes
+      ? new Date(Date.now() + porterOrder.etaMinutes * 60 * 1000)
+      : order.estimatedDeliveryTime;
+    order.farmerLocation = toGeoPoint(farmerCoords);
+    order.distanceKm = order.distanceKm ?? order.deliveryDistanceKm;
+    order.status = 'confirmed';
+    order.deliveryStatus = 'porter_assigned';
+    await order.save();
+    return order;
+  }
+
+  if (status === 'shipped') {
+    order.status = 'shipped';
+    order.deliveryStatus = order.deliveryStatus === 'picked_up' ? 'picked_up' : 'in_transit';
+    await order.save();
+    return order;
+  }
+
+  if (status === 'delivered') {
+    order.status = 'delivered';
+    order.deliveryStatus = 'delivered';
+    await order.save();
+    return order;
+  }
+
+  if (status === 'cancelled') {
+    order.status = 'cancelled';
+    await order.save();
+    return order;
   }
 
   order.status = status as any;

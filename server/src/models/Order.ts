@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import type { IGeoPoint } from './User.js';
 
 /**
  * Order Model
@@ -25,14 +26,55 @@ export interface IOrder {
   _id?: string;
   consumerId: string;
   farmerId?: string;
+  farmerName?: string;
   items: IOrderItem[];
+  subtotalAmount: number;
+  deliveryFee: number;
   totalAmount: number;
+  distanceKm?: number;
+  deliveryDistanceKm?: number;
+  farmerLocationLabel?: string;
+  customerLocation?: IGeoPoint;
+  farmerLocation?: IGeoPoint;
+  minimumOrderMet: boolean;
+  porterOrderId?: string;
+  porterTrackingUrl?: string;
+  deliveryStatus:
+    | 'pending'
+    | 'farmer_accepted'
+    | 'porter_assigned'
+    | 'picked_up'
+    | 'in_transit'
+    | 'delivered';
+  deliveryPartnerName?: string;
+  deliveryPartnerPhone?: string;
+  estimatedDeliveryTime?: Date;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   deliveryAddress: string;
   paymentMethod: string;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const geoPointSchema = new mongoose.Schema<IGeoPoint>(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: (value: number[]) => value.length === 2,
+        message: 'Customer coordinates must contain [longitude, latitude]',
+      },
+    },
+  },
+  { _id: false }
+);
 
 const orderItemSchema = new mongoose.Schema<IOrderItem>(
   {
@@ -49,8 +91,28 @@ const orderSchema = new mongoose.Schema<IOrder>(
   {
     consumerId: { type: String, required: true, index: true },
     farmerId: { type: String, index: true },
+    farmerName: { type: String },
     items: { type: [orderItemSchema], required: true },
+    subtotalAmount: { type: Number, required: true },
+    deliveryFee: { type: Number, required: true, default: 0 },
     totalAmount: { type: Number, required: true },
+    distanceKm: { type: Number },
+    deliveryDistanceKm: { type: Number },
+    farmerLocationLabel: { type: String },
+    customerLocation: { type: geoPointSchema, required: false },
+    farmerLocation: { type: geoPointSchema, required: false },
+    minimumOrderMet: { type: Boolean, required: true, default: false },
+    porterOrderId: { type: String },
+    porterTrackingUrl: { type: String },
+    deliveryStatus: {
+      type: String,
+      enum: ['pending', 'farmer_accepted', 'porter_assigned', 'picked_up', 'in_transit', 'delivered'],
+      default: 'pending',
+      index: true,
+    },
+    deliveryPartnerName: { type: String },
+    deliveryPartnerPhone: { type: String },
+    estimatedDeliveryTime: { type: Date },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
@@ -60,7 +122,18 @@ const orderSchema = new mongoose.Schema<IOrder>(
     deliveryAddress: { type: String, required: true },
     paymentMethod: { type: String, required: true },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: Record<string, any>) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  }
 );
 
 export const Order = mongoose.model<IOrder>('Order', orderSchema);

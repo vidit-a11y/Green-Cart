@@ -1,15 +1,39 @@
-import type { ApiResponse, Order, OrderStatus, PaginatedResponse } from '../../../types';
+import type {
+  ApiResponse,
+  DeliveryQuote,
+  GeoPoint,
+  Order,
+  OrderStatus,
+  PaginatedResponse,
+} from '../../../types';
 import api from '../../../lib/api';
 
 interface CreateOrderData {
   items: { productId: string; quantity: number }[];
   deliveryAddress: string;
   paymentMethod: string;
+  customerLocation: GeoPoint;
+}
+
+interface DeliveryQuoteData {
+  items: { productId: string; quantity: number }[];
+  customerLocation: GeoPoint;
 }
 
 export const orderService = {
   async create(data: CreateOrderData): Promise<Order> {
-    const response = await api.post<ApiResponse<Order>>('/orders', data);
+    try {
+      const response = await api.post<ApiResponse<Order>>('/orders', data);
+      return response.data.data;
+    } catch (error: any) {
+      // Surface the server's error message instead of the generic axios one
+      const message = error?.response?.data?.message || error?.message || 'Failed to place order';
+      throw new Error(message);
+    }
+  },
+
+  async getDeliveryQuote(data: DeliveryQuoteData): Promise<DeliveryQuote> {
+    const response = await api.post<ApiResponse<DeliveryQuote>>('/orders/quote', data);
     return response.data.data;
   },
 

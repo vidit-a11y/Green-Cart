@@ -2,6 +2,7 @@ import express from 'express';
 import {
   cancelOrder,
   createOrder,
+  getDeliveryQuote,
   getAllOrders,
   getConsumerOrders,
   getFarmerOrders,
@@ -10,13 +11,15 @@ import {
 } from '../controllers/orderController.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
+import { validateOrder } from '../middlewares/validate.middleware.js';
 
 const router = express.Router();
 
 // All order routes require authentication
 router.use(authenticateToken);
 
-router.post('/', createOrder);                                              // consumer creates order
+router.post('/quote', requireRole(['consumer', 'admin']), getDeliveryQuote);
+router.post('/', requireRole(['consumer', 'admin']), validateOrder, createOrder); // consumer creates order
 router.get('/consumer', getConsumerOrders);                                 // consumer views their orders
 router.get('/farmer', requireRole(['farmer', 'admin']), getFarmerOrders);   // farmer views their orders
 router.get('/', requireRole(['admin']), getAllOrders);                       // admin views all orders

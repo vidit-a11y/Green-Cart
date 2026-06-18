@@ -5,19 +5,34 @@ import {
   getUserById,
   getUserStats,
   updateUserRole,
+  getSavedAddresses,
+  addSavedAddress,
+  updateSavedAddress,
+  deleteSavedAddress,
+  setDefaultAddress,
 } from '../controllers/userController.js';
+import { updateProfile } from '../controllers/authController.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// All user routes require admin role
-router.use(authenticateToken, requireRole(['admin']));
+// ── Self-service routes (any authenticated user) ─────────────────────────────
+// PATCH /api/users/profile  — update own profile incl. location { lat, lng }
+router.patch('/profile', authenticateToken, updateProfile);
 
-router.get('/', getAllUsers);
-router.get('/stats', getUserStats);
-router.get('/:id', getUserById);
-router.patch('/:id/role', updateUserRole);
-router.delete('/:id', deleteUser);
+// ── Address Management (consumer/farmer self-service) ────────────────────────
+router.get('/addresses', authenticateToken, getSavedAddresses);
+router.post('/addresses', authenticateToken, addSavedAddress);
+router.put('/addresses/:id', authenticateToken, updateSavedAddress);
+router.delete('/addresses/:id', authenticateToken, deleteSavedAddress);
+router.put('/addresses/:id/default', authenticateToken, setDefaultAddress);
+
+// ── Admin-only routes ─────────────────────────────────────────────────────────
+router.get('/', authenticateToken, requireRole(['admin']), getAllUsers);
+router.get('/stats', authenticateToken, requireRole(['admin']), getUserStats);
+router.get('/:id', authenticateToken, requireRole(['admin']), getUserById);
+router.patch('/:id/role', authenticateToken, requireRole(['admin']), updateUserRole);
+router.delete('/:id', authenticateToken, requireRole(['admin']), deleteUser);
 
 export default router;

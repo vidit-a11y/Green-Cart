@@ -44,6 +44,7 @@ export const safeUser = (user: any) => ({
   role: user.role,
   phone: user.phone,
   address: user.address,
+  location: user.location,
   avatar: user.avatar,
   createdAt: user.createdAt,
 });

@@ -1,13 +1,21 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { User, UserRole } from '../../../types';
+import type { GeoPoint, User, UserRole } from '../../../types';
 import { authService } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: UserRole, phone?: string, address?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    role: UserRole,
+    phone?: string,
+    address?: string,
+    location?: GeoPoint
+  ) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<User>) => Promise<void>;
   hasRole: (roles: UserRole[]) => boolean;
@@ -31,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     const { user } = await authService.login({ email, password });
     setUser(user);
+    return user;
   };
 
   const register = async (
@@ -39,7 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     role: UserRole,
     phone?: string,
-    address?: string
+    address?: string,
+    location?: GeoPoint
   ) => {
     const { user } = await authService.register({
       name,
@@ -48,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role,
       phone,
       address,
+      location,
     });
     setUser(user);
   };

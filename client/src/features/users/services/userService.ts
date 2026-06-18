@@ -39,4 +39,16 @@ export const userService = {
     }>>('/users/stats');
     return response.data.data;
   },
+
+  /** Update the currently-authenticated user's GPS location. */
+  async updateMyLocation(coordinates: [number, number]): Promise<User> {
+    const response = await api.patch<ApiResponse<User>>('/auth/me/location', { coordinates });
+    return response.data.data;
+  },
+
+  /** Fetch the currently-authenticated user's own profile (incl. location). */
+  async getMe(): Promise<User> {
+    const response = await api.get<ApiResponse<User>>('/auth/me');
+    return response.data.data;
+  },
 };

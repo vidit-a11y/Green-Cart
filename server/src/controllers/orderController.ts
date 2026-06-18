@@ -14,10 +14,29 @@ import { sendError, sendSuccess } from '../utils/response.utils.js';
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const consumerId = (req as any).userId;
-    const { items, deliveryAddress, paymentMethod } = req.body;
+    const {
+      items,
+      deliveryAddress,
+      paymentMethod,
+      customerLocation,
+      customerLat,
+      customerLng,
+    } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       sendError(res, 'Order must contain at least one item', 400);
+      return;
+    }
+
+    // Accept either flat { customerLat, customerLng } or GeoJSON { customerLocation }
+    const resolvedLocation =
+      customerLocation ??
+      (customerLat !== undefined && customerLng !== undefined
+        ? { type: 'Point', coordinates: [Number(customerLng), Number(customerLat)] }
+        : undefined);
+
+    if (!resolvedLocation) {
+      sendError(res, 'Customer location is required (customerLocation or customerLat+customerLng)', 400);
       return;
     }
 
@@ -26,11 +45,52 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       items,
       deliveryAddress,
       paymentMethod,
+      customerLocation: resolvedLocation,
     });
 
     sendSuccess(res, order, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error creating order';
+    sendError(res, message, 400);
+  }
+};
+
+export const getDeliveryQuote = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { items, customerLocation, customerLat, customerLng } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      sendError(res, 'Order must contain at least one item', 400);
+      return;
+    }
+
+    // Validate that lat and lng are valid numbers if provided
+    if (customerLat !== undefined && customerLng !== undefined) {
+      const lat = Number(customerLat);
+      const lng = Number(customerLng);
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        sendError(res, 'Invalid customerLat or customerLng values provided', 400);
+        return;
+      }
+    }
+
+    // Accept either GeoJSON { customerLocation } or valid { customerLat, customerLng }
+    const resolvedLocation =
+      customerLocation && customerLocation.coordinates && customerLocation.coordinates.length === 2
+        ? customerLocation
+        : (customerLat !== undefined && customerLng !== undefined && !isNaN(Number(customerLat)) && !isNaN(Number(customerLng))
+          ? { type: 'Point', coordinates: [Number(customerLng), Number(customerLat)] }
+          : undefined);
+
+    if (!resolvedLocation) {
+      sendError(res, 'Customer location is required (customerLocation or valid customerLat+customerLng)', 400);
+      return;
+    }
+
+    const quote = await orderService.getDeliveryQuote(items, resolvedLocation);
+    sendSuccess(res, quote);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error calculating delivery';
     sendError(res, message, 400);
   }
 };

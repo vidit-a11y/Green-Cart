@@ -1,12 +1,9 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
   timeout: 10000,
 });
 
@@ -15,6 +12,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },

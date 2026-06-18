@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
+import { useAuth } from '../../features/auth/context/AuthContext';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -80,10 +81,14 @@ interface ProductCardProps {
   price: number;
   unit: string;
   image?: string;
+  imageUrl?: string;
+  images?: string[];
   farmerName?: string;
   location?: string;
   rating?: number;
   reviewsCount?: number;
+  /** Optional delivery distance/fee badge injected from the parent page */
+  deliveryBadge?: React.ReactNode;
   onAddToCart?: () => void;
   onClick?: () => void;
 }
@@ -93,50 +98,60 @@ export function ProductCard({
   price,
   unit,
   image,
+  imageUrl,
+  images,
   farmerName,
   location,
   rating,
   reviewsCount,
+  deliveryBadge,
   onAddToCart,
   onClick,
 }: ProductCardProps) {
+  const { user } = useAuth();
+  const canAddToCart = user?.role === 'consumer';
+  const displayImage = image || imageUrl || images?.[0];
+
   return (
-    <Card 
-      hover={!!onClick} 
-      variant="nature" 
-      rounded="2xl" 
+    <Card
+      hover={!!onClick}
+      variant="nature"
+      rounded="2xl"
       className="h-full flex flex-col group"
     >
       {/* Image Container with gradient border effect */}
-      <div 
+      <div
         className="relative aspect-square mb-5 rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-600 cursor-pointer"
         onClick={onClick}
       >
         {/* Gradient border overlay */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
-        {image ? (
+
+        {displayImage ? (
           <img
-            src={image}
+            src={displayImage}
             alt={name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-200/50 to-emerald-200/50 dark:from-green-900/30 dark:to-emerald-900/30 flex items-center justify-center">
-              <svg className="w-12 h-12 text-green-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-900/20 via-emerald-700/20 to-lime-500/20 dark:from-green-950 dark:via-emerald-900/50 dark:to-lime-900/40">
+            <div className="flex flex-col items-center justify-center gap-2 text-center px-4">
+              <div className="w-16 h-16 rounded-full bg-white/80 dark:bg-gray-800/80 flex items-center justify-center shadow-sm">
+                <span className="text-3xl" aria-hidden="true">🥬</span>
+              </div>
+              <span className="text-sm font-semibold text-green-900 dark:text-green-100">
+                No Image
+              </span>
             </div>
           </div>
         )}
-        
+
         {/* Hover overlay with icon */}
         <div className="absolute inset-0 bg-gradient-to-t from-green-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end justify-center pb-4">
           <span className="text-white text-sm font-medium">Click to view</span>
         </div>
-        
+
         {/* Top badge - optional organic tag */}
         <div className="absolute top-3 left-3">
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur text-xs font-semibold text-green-700 dark:text-green-400 shadow-sm">
@@ -147,13 +162,13 @@ export function ProductCard({
           </span>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="flex-1 flex flex-col" onClick={onClick}>
         <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2 line-clamp-2 group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">
           {name}
         </h3>
-        
+
         {farmerName && (
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
             <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,9 +177,9 @@ export function ProductCard({
             {farmerName}
           </p>
         )}
-        
+
         {location && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-2">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -172,7 +187,12 @@ export function ProductCard({
             {location}
           </p>
         )}
-        
+
+        {/* Delivery badge — injected by the parent page when location is known */}
+        {deliveryBadge && (
+          <div className="mb-2">{deliveryBadge}</div>
+        )}
+
         {rating !== undefined && (
           <div className="flex items-center gap-1.5 mb-3">
             <div className="flex text-amber-400">
@@ -196,7 +216,7 @@ export function ProductCard({
             )}
           </div>
         )}
-        
+
         {/* Price and Action */}
         <div className="mt-auto flex items-center justify-between pt-3 border-t border-green-100/50 dark:border-gray-700/50">
           <div>
@@ -206,9 +226,11 @@ export function ProductCard({
             </span>
             <span className="text-sm text-gray-600 dark:text-gray-400">/{unit}</span>
           </div>
-          
-          {onAddToCart && (
+
+          {canAddToCart && onAddToCart && (
             <button
+              type="button"
+              aria-label={`Add ${name} to cart`}
               onClick={(e) => {
                 e.stopPropagation();
                 onAddToCart();
@@ -218,7 +240,7 @@ export function ProductCard({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="hidden sm:inline">Add</span>
+              <span className="hidden sm:inline">Add to Cart</span>
             </button>
           )}
         </div>

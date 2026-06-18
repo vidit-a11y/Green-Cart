@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '../../../components/shared/EmptyState';
+import { DeliveryMap } from '../../../components/shared/DeliveryMap';
 import { Button } from '../../../components/ui/Button';
 import { Card } from '../../../components/ui/Card';
-import { EmptyState } from '../../../components/shared/EmptyState';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
-import { useToast } from '../../../utils/ToastContext';
 import { orderService } from '../../../features/cart/services/orderService';
 import type { Order, OrderStatus } from '../../../types';
+import { useToast } from '../../../utils/ToastContext';
 
 const statusColors: Record<OrderStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -17,6 +18,15 @@ const statusColors: Record<OrderStatus, string> = {
 };
 
 const statusFlow: OrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered'];
+
+const deliveryStatusLabels: Record<Order['deliveryStatus'], string> = {
+  pending: 'Pending',
+  farmer_accepted: 'Farmer accepted',
+  porter_assigned: 'Porter assigned',
+  picked_up: 'Picked up',
+  in_transit: 'In transit',
+  delivered: 'Delivered',
+};
 
 export function FarmerOrders() {
   const { t } = useTranslation();
@@ -30,7 +40,7 @@ export function FarmerOrders() {
   const fetchOrders = useCallback(async () => {
     try {
       const response = await orderService.getFarmerOrders(1, 50);
-      setOrders(response.data);
+      setOrders(response?.data ?? []);
     } catch (error) {
       showToast('Failed to load orders', 'error');
     } finally {
@@ -40,25 +50,51 @@ export function FarmerOrders() {
 
   useEffect(() => {
     fetchOrders();
+    const intervalId = window.setInterval(fetchOrders, 30000);
+    return () => window.clearInterval(intervalId);
   }, [fetchOrders]);
+
+  const getNextStatus = (order: Order) => {
+    const currentIndex = statusFlow.indexOf(order.status);
+    return currentIndex >= 0 && currentIndex < statusFlow.length - 1
+      ? statusFlow[currentIndex + 1]
+      : null;
+  };
+
+  const getPrimaryActionLabel = (order: Order) => {
+    const nextStatus = getNextStatus(order);
+    if (!nextStatus) return '';
+    if (order.status === 'pending') return 'Accept Order';
+    if (nextStatus === 'shipped') return 'Mark In Transit';
+    if (nextStatus === 'delivered') return 'Mark Delivered';
+    return t('farmer.orders.markAs', { status: nextStatus });
+  };
 
   const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
     setIsUpdating(true);
     try {
-      await orderService.updateStatus(orderId, newStatus);
-      showToast(`Order status updated to ${newStatus}`, 'success');
-      fetchOrders();
-      setSelectedOrder(null);
+      const updatedOrder = await orderService.updateStatus(orderId, newStatus);
+
+      if (newStatus === 'confirmed' && updatedOrder.porterOrderId) {
+        showToast('Order accepted and Porter assigned successfully', 'success');
+      } else {
+        showToast(`Order status updated to ${newStatus}`, 'success');
+      }
+
+      await fetchOrders();
+      setSelectedOrder(updatedOrder);
     } catch (error) {
-      showToast('Failed to update order status', 'error');
+      showToast(
+        error instanceof Error ? error.message : 'Failed to update order status',
+        'error'
+      );
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const filteredOrders = filter === 'all' 
-    ? orders 
-    : orders.filter((o) => o.status === filter);
+  const filteredOrders =
+    filter === 'all' ? orders : orders.filter((order) => order.status === filter);
 
   if (isLoading) {
     return <LoadingSpinner fullScreen text="Loading orders..." />;
@@ -72,7 +108,6 @@ export function FarmerOrders() {
           <p className="text-gray-600 dark:text-gray-400">{t('farmer.orders.subtitle')}</p>
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
           {(['all', 'pending', 'confirmed', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
             <button
@@ -84,15 +119,20 @@ export function FarmerOrders() {
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
               }`}
             >
-              {status === 'all' ? t('farmer.orders.all') :
-               status === 'pending' ? t('farmer.orders.pending') :
-               status === 'confirmed' ? t('farmer.orders.confirmed') :
-               status === 'shipped' ? t('farmer.orders.shipped') :
-               status === 'delivered' ? t('farmer.orders.delivered') :
-               t('farmer.orders.cancelled')}
+              {status === 'all'
+                ? t('farmer.orders.all')
+                : status === 'pending'
+                  ? t('farmer.orders.pending')
+                  : status === 'confirmed'
+                    ? t('farmer.orders.confirmed')
+                    : status === 'shipped'
+                      ? t('farmer.orders.shipped')
+                      : status === 'delivered'
+                        ? t('farmer.orders.delivered')
+                        : t('farmer.orders.cancelled')}
               {status !== 'all' && (
                 <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                  {orders.filter((o) => o.status === status).length}
+                  {orders.filter((order) => order.status === status).length}
                 </span>
               )}
             </button>
@@ -101,45 +141,59 @@ export function FarmerOrders() {
 
         {filteredOrders.length > 0 ? (
           <div className="space-y-4">
-            {filteredOrders.map((order) => (
-              <Card key={order.id} padding="md">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        Order #{order.id.slice(-8)}
-                      </h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${statusColors[order.status]}`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                      {new Date(order.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {order.items.length} item{order.items.length > 1 ? 's' : ''} • ₹{order.totalAmount.toLocaleString('en-IN')}
-                    </p>
-                  </div>
+            {filteredOrders.map((order) => {
+              const nextStatus = getNextStatus(order);
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                      <>
-                        {statusFlow.indexOf(order.status) < statusFlow.length - 1 && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              const nextStatus = statusFlow[statusFlow.indexOf(order.status) + 1];
-                              handleUpdateStatus(order.id, nextStatus);
-                            }}
-                            isLoading={isUpdating}
-                          >
-                            {t('farmer.orders.markAs', { status: statusFlow[statusFlow.indexOf(order.status) + 1] })}
-                          </Button>
-                        )}
+              return (
+                <Card key={order.id} padding="md">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                          Order #{(order.id ?? order._id)?.toString().slice(-8) ?? 'N/A'}
+                        </h3>
+                        <span className={`text-xs px-2 py-1 rounded-full ${statusColors[order.status]}`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                          {deliveryStatusLabels[order.deliveryStatus]}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        {new Date(order.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {order.items.length} item{order.items.length > 1 ? 's' : ''} • Rs. {order.totalAmount.toLocaleString('en-IN')}
+                      </p>
+                      {(order.distanceKm || order.deliveryDistanceKm) && (
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Delivery: {order.deliveryFee === 0 ? 'FREE' : `Rs. ${order.deliveryFee}`} •{' '}
+                          {(order.distanceKm ?? order.deliveryDistanceKm)?.toFixed(1)} km
+                        </p>
+                      )}
+                      {order.deliveryPartnerName && (
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          Partner: {order.deliveryPartnerName}
+                          {order.deliveryPartnerPhone ? ` • ${order.deliveryPartnerPhone}` : ''}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {order.status !== 'cancelled' && order.status !== 'delivered' && nextStatus && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateStatus(order.id, nextStatus)}
+                          isLoading={isUpdating}
+                        >
+                          {getPrimaryActionLabel(order)}
+                        </Button>
+                      )}
+                      {order.status !== 'cancelled' && order.status !== 'delivered' && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -148,19 +202,15 @@ export function FarmerOrders() {
                         >
                           Cancel
                         </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      {t('farmer.orders.viewDetails')}
-                    </Button>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => setSelectedOrder(order)}>
+                        {t('farmer.orders.viewDetails')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -173,14 +223,13 @@ export function FarmerOrders() {
           />
         )}
 
-        {/* Order Details Modal */}
         {selectedOrder && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <Card padding="lg" className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Order #{selectedOrder.id.slice(-8)}
+                    Order #{(selectedOrder.id ?? selectedOrder._id)?.toString().slice(-8) ?? 'N/A'}
                   </h2>
                   <p className="text-gray-500 dark:text-gray-400">
                     {new Date(selectedOrder.createdAt).toLocaleString()}
@@ -197,14 +246,15 @@ export function FarmerOrders() {
               </div>
 
               <div className="space-y-6">
-                {/* Status */}
-                <div>
+                <div className="flex flex-wrap items-center gap-3">
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[selectedOrder.status]}`}>
                     {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
                   </span>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    {deliveryStatusLabels[selectedOrder.deliveryStatus]}
+                  </span>
                 </div>
 
-                {/* Items */}
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{t('farmer.orders.items')}</h3>
                   <div className="space-y-2">
@@ -217,14 +267,59 @@ export function FarmerOrders() {
                           {item.productName} × {item.quantity} {item.unit}
                         </span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                          ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                          Rs. {(item.price * item.quantity).toLocaleString('en-IN')}
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Delivery Address */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Delivery tracking</h3>
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p>
+                      Distance: {(selectedOrder.distanceKm ?? selectedOrder.deliveryDistanceKm ?? 0).toFixed(1)} km
+                    </p>
+                    <p>Delivery fee: {selectedOrder.deliveryFee === 0 ? 'FREE' : `Rs. ${selectedOrder.deliveryFee}`}</p>
+                    <p>Minimum order met: {selectedOrder.minimumOrderMet ? 'Yes' : 'No'}</p>
+                    {selectedOrder.porterOrderId && <p>Porter Order ID: {selectedOrder.porterOrderId}</p>}
+                    {selectedOrder.deliveryPartnerName && (
+                      <p>
+                        Driver: {selectedOrder.deliveryPartnerName}
+                        {selectedOrder.deliveryPartnerPhone ? ` • ${selectedOrder.deliveryPartnerPhone}` : ''}
+                      </p>
+                    )}
+                    {selectedOrder.estimatedDeliveryTime && (
+                      <p>ETA: {new Date(selectedOrder.estimatedDeliveryTime).toLocaleString()}</p>
+                    )}
+                    {selectedOrder.porterTrackingUrl && (
+                      <a
+                        href={selectedOrder.porterTrackingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex text-green-600 hover:text-green-700"
+                      >
+                        Open tracking link
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Delivery Route Map */}
+                  {selectedOrder.farmerLocation?.coordinates && selectedOrder.customerLocation?.coordinates && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Delivery Route</p>
+                      <DeliveryMap
+                        farmerCoords={selectedOrder.farmerLocation.coordinates}
+                        customerCoords={selectedOrder.customerLocation.coordinates}
+                        distanceKm={selectedOrder.distanceKm ?? selectedOrder.deliveryDistanceKm}
+                        farmerLabel={selectedOrder.farmerLocationLabel || 'Pickup location'}
+                        customerLabel="Customer delivery address"
+                        height="260px"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('farmer.orders.deliveryAddress')}</h3>
                   <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">
@@ -232,7 +327,6 @@ export function FarmerOrders() {
                   </p>
                 </div>
 
-                {/* Payment */}
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t('farmer.orders.payment')}</h3>
                   <p className="text-gray-600 dark:text-gray-400 capitalize">
@@ -240,28 +334,21 @@ export function FarmerOrders() {
                   </p>
                 </div>
 
-                {/* Total */}
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
                     <span>{t('farmer.orders.total')}</span>
-                    <span>₹{selectedOrder.totalAmount.toLocaleString('en-IN')}</span>
+                    <span>Rs. {selectedOrder.totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
-                {/* Actions */}
-                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+                {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && getNextStatus(selectedOrder) && (
                   <div className="flex gap-3 pt-4">
-                    {statusFlow.indexOf(selectedOrder.status) < statusFlow.length - 1 && (
-                      <Button
-                        onClick={() => {
-                          const nextStatus = statusFlow[statusFlow.indexOf(selectedOrder.status) + 1];
-                          handleUpdateStatus(selectedOrder.id, nextStatus);
-                        }}
-                        isLoading={isUpdating}
-                      >
-                        {t('farmer.orders.markAs', { status: statusFlow[statusFlow.indexOf(selectedOrder.status) + 1] })}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedOrder.id, getNextStatus(selectedOrder)!)}
+                      isLoading={isUpdating}
+                    >
+                      {getPrimaryActionLabel(selectedOrder)}
+                    </Button>
                     <Button
                       variant="outline"
                       onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}

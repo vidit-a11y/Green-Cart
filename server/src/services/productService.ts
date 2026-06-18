@@ -112,3 +112,18 @@ export const getDistinctCategories = async (): Promise<string[]> => {
 export const getDistinctLocations = async (): Promise<string[]> => {
   return Product.distinct('location');
 };
+
+export const updateFarmerProductLocations = async (farmerId: string, lng: number, lat: number) => {
+  const result = await Product.updateMany(
+    { farmerId },
+    {
+      $set: {
+        geoLocation: {
+          type: 'Point',
+          coordinates: [lng, lat],
+        },
+      },
+    }
+  );
+  return result;
+};

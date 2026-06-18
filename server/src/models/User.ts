@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+export interface IGeoPoint {
+  type: 'Point';
+  coordinates: [number, number];
+}
+
 export interface IUser {
   _id?: string;
   name: string;
@@ -10,9 +15,68 @@ export interface IUser {
   role: 'farmer' | 'consumer' | 'admin';
   phone?: string;
   address?: string;
+  location?: IGeoPoint;
+  savedAddresses?: ISavedAddress[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface ISavedAddress {
+  _id?: string;
+  label: 'Home' | 'Work' | 'Other';
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  coordinates: [number, number]; // [lng, lat]
+  isDefault: boolean;
+}
+
+const geoPointSchema = new mongoose.Schema<IGeoPoint>(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point',
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: (value: number[]) => value.length === 2,
+        message: 'Location coordinates must contain [longitude, latitude]',
+      },
+    },
+  },
+  { _id: false }
+);
+
+const savedAddressSchema = new mongoose.Schema<ISavedAddress>(
+  {
+    label: {
+      type: String,
+      enum: ['Home', 'Work', 'Other'],
+      default: 'Home',
+      required: true,
+    },
+    addressLine: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true },
+    coordinates: {
+      type: [Number],
+      required: true,
+      default: [0, 0],
+      validate: {
+        validator: (value: number[]) => value.length === 2,
+        message: 'Coordinates must contain [longitude, latitude]',
+      },
+    },
+    isDefault: { type: Boolean, default: false },
+  },
+  { _id: true }
+);
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -49,9 +113,12 @@ const userSchema = new mongoose.Schema<IUser>(
 
     phone: { type: String },
     address: { type: String },
+    location: { type: geoPointSchema, required: false },
+    savedAddresses: { type: [savedAddressSchema], default: [] },
   },
   { timestamps: true }
 );
 
+userSchema.index({ location: '2dsphere' });
 
 export const User = mongoose.model<IUser>('User', userSchema);

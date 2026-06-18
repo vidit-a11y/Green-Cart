@@ -9,7 +9,6 @@ import { useAuth } from '../../../features/auth/context/AuthContext';
 import { useToast } from '../../../utils/ToastContext';
 import { productService } from '../../../features/products/services/productService';
 import type { Product, ProductFormData } from '../../../types';
-import { uploadImage } from '../../../utils/uploadImage';
 
 const categories = [
   'Vegetables',
@@ -42,9 +41,11 @@ const units = [
   { value: 'ml', label: 'Millilitre (ml)' },
 ];
 
+type ProductSubmitData = Omit<ProductFormData, 'location'> & { imageFile?: File | null };
+
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: ProductFormData) => Promise<void>;
+  onSubmit: (data: ProductSubmitData) => Promise<void>;
   onCancel: () => void;
   isLoading: boolean;
 }
@@ -58,22 +59,24 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     quantity: product?.quantity || 0,
     category: product?.category || categories[0],
     unit: product?.unit || 'kg',
-    location: product?.location || '',
+    location: '', // Keep for type compatibility but not used in form
     isAvailable: product?.isAvailable ?? true,
-    images: product?.images || [],
+    images: product?.images || (product?.imageUrl ? [product.imageUrl] : []),
+    imageUrl: product?.imageUrl,
   });
 
-  const [file, setFile] = useState<File | null>(null);
-const [uploading, setUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState(product?.imageUrl || product?.images?.[0] || '');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = t('farmer.products.form.nameRequired');
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (formData.price <= 0) newErrors.price = t('farmer.products.form.priceRequired');
     if (formData.quantity < 0) newErrors.quantity = t('farmer.products.form.quantityRequired');
-    if (!formData.location.trim()) newErrors.location = t('farmer.products.form.locationRequired');
+    // Removed location validation - farmer location is from profile
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,7 +84,7 @@ const [uploading, setUploading] = useState(false);
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData);
+      onSubmit({ ...formData, imageFile });
     }
   };
 
@@ -101,15 +104,41 @@ const [uploading, setUploading] = useState(false);
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setImageFile(selectedFile);
+
+    if (selectedFile) {
+      setPreviewUrl(URL.createObjectURL(selectedFile));
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <Input
+        label={t('farmer.products.form.productName')}
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        error={errors.name}
+        required
+      />
+
       <div className="grid md:grid-cols-2 gap-4">
-        <Input
-          label={t('farmer.products.form.productName')}
-          name="name"
-          value={formData.name}
+        <Select
+          label={t('farmer.products.form.category')}
+          name="category"
+          value={formData.category}
           onChange={handleChange}
-          error={errors.name}
+          options={categories.map((c) => ({ value: c, label: c }))}
           required
         />
         <Input
@@ -126,25 +155,6 @@ const [uploading, setUploading] = useState(false);
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <Select
-          label={t('farmer.products.form.category')}
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          options={categories.map((c) => ({ value: c, label: c }))}
-          required
-        />
-        <Select
-          label={t('farmer.products.form.unit')}
-          name="unit"
-          value={formData.unit}
-          onChange={handleChange}
-          options={units}
-          required
-        />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-4">
         <Input
           label={t('farmer.products.form.quantity')}
           name="quantity"
@@ -155,13 +165,12 @@ const [uploading, setUploading] = useState(false);
           error={errors.quantity}
           required
         />
-        <Input
-          label={t('farmer.products.form.location')}
-          name="location"
-          value={formData.location}
+        <Select
+          label={t('farmer.products.form.unit')}
+          name="unit"
+          value={formData.unit}
           onChange={handleChange}
-          error={errors.location}
-          placeholder={t('farmer.products.form.locationPlaceholder')}
+          options={units}
           required
         />
       </div>
@@ -175,9 +184,14 @@ const [uploading, setUploading] = useState(false);
           rows={4}
           value={formData.description}
           onChange={handleChange}
-          className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className={`w-full px-4 py-2.5 rounded-lg border ${
+            errors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+          } bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent`}
           placeholder={t('farmer.products.form.descriptionPlaceholder')}
         />
+        {errors.description && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
+        )}
       </div>
 
       <label className="flex items-center gap-2">
@@ -192,53 +206,24 @@ const [uploading, setUploading] = useState(false);
       </label>
 
       <div>
-  <label className="block text-sm font-medium mb-2">
-    {t('farmer.products.form.uploadImage')}
-  </label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {t('farmer.products.form.uploadImage')}
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-4 file:rounded-lg file:border-0 file:bg-green-600 file:px-4 file:py-2 file:text-white hover:file:bg-green-700"
+        />
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={(e) => setFile(e.target.files?.[0] || null)}
-  />
-
-  <button
-    type="button"
-    onClick={async () => {
-      if (!file) return;
-
-      try {
-        setUploading(true);
-        const url = await uploadImage(file);
-
-        // 🔥 IMPORTANT: save into formData
-        setFormData((prev) => ({
-          ...prev,
-          images: [url], // or [...prev.images, url] for multiple
-        }));
-
-        alert(t('farmer.products.form.imageUploaded'));
-      } catch (err) {
-        console.error(err);
-        alert(t('farmer.products.form.uploadFailed'));
-      } finally {
-        setUploading(false);
-      }
-    }}
-    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded"
-  >
-    {uploading ? t('farmer.products.form.uploading') : t('farmer.products.form.uploadBtn')}
-  </button>
-
-  {/* Preview */}
-  {formData.images.length > 0 && (
-    <img
-      src={formData.images[0]}
-      alt="preview"
-      className="w-32 h-32 mt-3 rounded"
-    />
-  )}
-</div>
+        {previewUrl && (
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="w-32 h-32 min-w-[100px] min-h-[100px] object-cover rounded-lg mt-2 border border-gray-200 dark:border-gray-700"
+          />
+        )}
+      </div>
       <div className="flex gap-4">
         <Button type="submit" isLoading={isLoading}>
           {product ? t('farmer.products.form.updateBtn') : t('farmer.products.form.addBtn')}
@@ -253,7 +238,7 @@ const [uploading, setUploading] = useState(false);
 
 export function FarmerProducts() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { showToast } = useToast();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -261,6 +246,7 @@ export function FarmerProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     if (!user) return;
@@ -278,10 +264,74 @@ export function FarmerProducts() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const handleCreate = async (data: ProductFormData) => {
+  const handleCaptureFarmLocation = async () => {
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported in this browser', 'error');
+      return;
+    }
+
+    setIsUpdatingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await updateUser({
+            location: {
+              type: 'Point',
+              coordinates: [
+                position.coords.longitude,
+                position.coords.latitude,
+              ],
+            },
+          });
+          showToast('Farm location updated successfully', 'success');
+          fetchProducts();
+        } catch (error) {
+          showToast('Failed to save farm location', 'error');
+        } finally {
+          setIsUpdatingLocation(false);
+        }
+      },
+      () => {
+        showToast('Please allow location access to enable nearby delivery', 'error');
+        setIsUpdatingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const toProductFormData = (
+    data: ProductSubmitData,
+    userData: { id: string; name: string },
+  ) => {
+    const payload = new FormData();
+    payload.append('name', data.name);
+    payload.append('description', data.description);
+    payload.append('price', String(data.price));
+    payload.append('quantity', String(data.quantity));
+    payload.append('category', data.category);
+    payload.append('unit', data.unit);
+    payload.append('location', userData.name); // Use farmer name as location string
+    payload.append('isAvailable', String(data.isAvailable));
+    payload.append('farmerId', userData.id);
+    payload.append('farmerName', userData.name);
+
+    if (data.imageFile) {
+      payload.append('image', data.imageFile);
+    }
+
+    return payload;
+  };
+
+  const handleCreate = async (data: ProductSubmitData) => {
+    if (!user) return;
     setIsSubmitting(true);
     try {
-      await productService.create(data);
+      await productService.create(toProductFormData(data, user));
       showToast('Product added successfully', 'success');
       setShowAddForm(false);
       fetchProducts();
@@ -292,11 +342,11 @@ export function FarmerProducts() {
     }
   };
 
-  const handleUpdate = async (data: ProductFormData) => {
-    if (!editingProduct) return;
+  const handleUpdate = async (data: ProductSubmitData) => {
+    if (!editingProduct || !user) return;
     setIsSubmitting(true);
     try {
-      await productService.update(editingProduct.id, data);
+      await productService.update(editingProduct.id, toProductFormData(data, user));
       showToast('Product updated successfully', 'success');
       setEditingProduct(null);
       fetchProducts();
@@ -338,6 +388,29 @@ export function FarmerProducts() {
           </Button>
         </div>
 
+        {!user?.location && (
+          <Card padding="md" className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-medium text-amber-900 dark:text-amber-100">
+                  Enable your farm GPS location
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-200">
+                  Nearby customer delivery works only after we save your current farm coordinates.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCaptureFarmLocation}
+                isLoading={isUpdatingLocation}
+              >
+                Use Current Location
+              </Button>
+            </div>
+          </Card>
+        )}
+
         {/* Add/Edit Form */}
         {(showAddForm || editingProduct) && (
           <Card padding="lg" className="mb-8">
@@ -360,10 +433,18 @@ export function FarmerProducts() {
         {products.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} padding="md">
+              <Card key={product._id ?? product.id} padding="md">
                 <div className="flex items-start gap-4">
-                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">🥬</span>
+                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {product.imageUrl || product.images?.[0] ? (
+                      <img
+                        src={product.imageUrl || product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl">🥬</span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 dark:text-white truncate">
