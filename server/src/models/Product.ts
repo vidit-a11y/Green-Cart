@@ -5,7 +5,9 @@ export interface IProduct {
   _id?: string;
   name: string;
   description: string;
-  price: number;
+  price: number;         // consumer-facing price (farmerPrice + 1.5% admin cut)
+  farmerPrice?: number;  // original price set by farmer
+  adminCut?: number;     // 1.5% of farmerPrice
   quantity: number;
   category: string;
   unit: string;
@@ -45,7 +47,9 @@ const geoPointSchema = new mongoose.Schema<IGeoPoint>(
 const productSchema = new mongoose.Schema<IProduct>({
   name: { type: String, required: true },
   description: { type: String, required: true },
-  price: { type: Number, required: true },
+  price: { type: Number, required: true },       // consumer price
+  farmerPrice: { type: Number },                 // original farmer price
+  adminCut: { type: Number },                    // 1.5% cut amount
   quantity: { type: Number, required: true },
   category: { type: String, required: true },
   unit: { type: String, required: true },

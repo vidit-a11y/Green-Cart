@@ -23,7 +23,17 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       customerLng,
     } = req.body;
 
+    // Enhanced logging for debugging
+    console.log('📦 CREATE ORDER REQUEST:');
+    console.log('consumerId:', consumerId);
+    console.log('items:', JSON.stringify(items, null, 2));
+    console.log('deliveryAddress:', deliveryAddress);
+    console.log('paymentMethod:', paymentMethod);
+    console.log('customerLocation:', customerLocation);
+    console.log('customerLat:', customerLat, 'customerLng:', customerLng);
+
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('❌ Validation failed: items missing or empty');
       sendError(res, 'Order must contain at least one item', 400);
       return;
     }
@@ -36,10 +46,12 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         : undefined);
 
     if (!resolvedLocation) {
+      console.error('❌ Validation failed: customerLocation missing');
       sendError(res, 'Customer location is required (customerLocation or customerLat+customerLng)', 400);
       return;
     }
 
+    console.log('✅ Validation passed, creating order...');
     const order = await orderService.createOrder({
       consumerId,
       items,
@@ -48,8 +60,10 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       customerLocation: resolvedLocation,
     });
 
+    console.log('✅ Order created successfully:', order._id);
     sendSuccess(res, order, 201);
   } catch (error) {
+    console.error('❌ Order creation error:', error);
     const message = error instanceof Error ? error.message : 'Error creating order';
     sendError(res, message, 400);
   }
@@ -102,6 +116,17 @@ export const getConsumerOrders = async (req: Request, res: Response): Promise<vo
     const limit = parseInt(req.query.limit as string) || 10;
     const result = await orderService.getOrdersByConsumer(consumerId, page, limit);
     sendSuccess(res, result);
+  } catch (error) {
+    sendError(res, 'Error fetching orders');
+  }
+};
+
+/** GET /api/orders/my-orders — all orders for logged-in consumer, newest first */
+export const getMyOrders = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const consumerId = (req as any).userId;
+    const result = await orderService.getOrdersByConsumer(consumerId, 1, 100);
+    sendSuccess(res, result.data);
   } catch (error) {
     sendError(res, 'Error fetching orders');
   }

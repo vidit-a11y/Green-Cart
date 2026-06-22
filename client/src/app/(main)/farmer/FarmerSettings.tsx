@@ -5,12 +5,24 @@ import { useAuth } from '../../../features/auth/context/AuthContext';
 import { useToast } from '../../../utils/ToastContext';
 import { userService } from '../../../features/users/services/userService';
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export function FarmerSettings() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isSavingLocation, setIsSavingLocation] = useState(false);
+
+  // Payment details state
+  const [paymentDetails, setPaymentDetails] = useState({
+    upiId: (user as any)?.paymentDetails?.upiId || '',
+    accountNumber: (user as any)?.paymentDetails?.accountNumber || '',
+    ifscCode: (user as any)?.paymentDetails?.ifscCode || '',
+    accountHolderName: (user as any)?.paymentDetails?.accountHolderName || '',
+    bankName: (user as any)?.paymentDetails?.bankName || '',
+  });
+  const [isSavingPayment, setIsSavingPayment] = useState(false);
 
   // The backend uses [lng, lat]
   const initialCoords = user?.location?.coordinates as [number, number] | undefined;
@@ -19,25 +31,15 @@ export function FarmerSettings() {
   const handleSaveLocation = async (coords: [number, number]) => {
     setIsSavingLocation(true);
     try {
-      // Update user's location
       await userService.updateMyLocation(coords);
-      
-      // Also update all farmer's products with new location
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/products/update-locations`, {
+        await fetch(`${API}/products/update-locations`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            lat: coords[1],
-            lng: coords[0],
-          }),
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ lat: coords[1], lng: coords[0] }),
         });
       }
-      
       setShowLocationPicker(false);
       showToast('✅ Farm location saved and all products updated!', 'success');
     } catch (error) {
@@ -45,6 +47,24 @@ export function FarmerSettings() {
       showToast('Failed to save location. Please try again.', 'error');
     } finally {
       setIsSavingLocation(false);
+    }
+  };
+
+  const handleSavePayment = async () => {
+    setIsSavingPayment(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/users/payment-details`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(paymentDetails),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      showToast('✅ Payment details saved!', 'success');
+    } catch {
+      showToast('Failed to save payment details. Please try again.', 'error');
+    } finally {
+      setIsSavingPayment(false);
     }
   };
 
@@ -113,6 +133,86 @@ export function FarmerSettings() {
               />
             </div>
           )}
+        </Card>
+
+        {/* Payment Details Section */}
+        <Card padding="lg">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                💰 Payment Details
+              </h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 max-w-2xl">
+                Your UPI ID or bank account for receiving order payments. Payments are transferred within 24 hours of delivery.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">UPI ID</label>
+              <input
+                placeholder="e.g. yourname@upi"
+                value={paymentDetails.upiId}
+                onChange={(e) => setPaymentDetails((p) => ({ ...p, upiId: e.target.value }))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
+                <input
+                  placeholder="Bank account number"
+                  value={paymentDetails.accountNumber}
+                  onChange={(e) => setPaymentDetails((p) => ({ ...p, accountNumber: e.target.value }))}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">IFSC Code</label>
+                <input
+                  placeholder="e.g. SBIN0001234"
+                  value={paymentDetails.ifscCode}
+                  onChange={(e) => setPaymentDetails((p) => ({ ...p, ifscCode: e.target.value }))}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Holder Name</label>
+              <input
+                placeholder="Name on bank account"
+                value={paymentDetails.accountHolderName}
+                onChange={(e) => setPaymentDetails((p) => ({ ...p, accountHolderName: e.target.value }))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bank Name</label>
+              <input
+                placeholder="e.g. SBI, HDFC, ICICI"
+                value={paymentDetails.bankName}
+                onChange={(e) => setPaymentDetails((p) => ({ ...p, bankName: e.target.value }))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                onClick={handleSavePayment}
+                disabled={isSavingPayment}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors"
+              >
+                {isSavingPayment ? 'Saving…' : 'Save Payment Details'}
+              </button>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                🔒 Encrypted and secure
+              </p>
+            </div>
+          </div>
         </Card>
 
         {/* Account Info placeholder */}

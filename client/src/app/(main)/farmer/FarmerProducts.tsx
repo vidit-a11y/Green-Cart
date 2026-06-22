@@ -453,6 +453,14 @@ export function FarmerProducts() {
                     <p className="text-green-600 dark:text-green-400 font-medium">
                       ₹{product.price.toLocaleString('en-IN')}/{product.unit}
                     </p>
+                    {(product as any).farmerPrice && (product as any).farmerPrice !== product.price && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                        Consumer pays: ₹{product.price}/{product.unit} &nbsp;•&nbsp;
+                        <span className="text-green-600 dark:text-green-400 font-medium">
+                          Your earnings: ₹{(product as any).farmerPrice}/{product.unit}
+                        </span>
+                      </p>
+                    )}
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {product.quantity} in stock • {product.category}
                     </p>

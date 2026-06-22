@@ -1,4 +1,5 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import {
   deleteUser,
   getAllUsers,
@@ -14,6 +15,8 @@ import {
 import { updateProfile } from '../controllers/authController.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 import { requireRole } from '../middlewares/role.middleware.js';
+import { User } from '../models/User.js';
+import { sendError, sendSuccess } from '../utils/response.utils.js';
 
 const router = express.Router();
 
@@ -27,6 +30,25 @@ router.post('/addresses', authenticateToken, addSavedAddress);
 router.put('/addresses/:id', authenticateToken, updateSavedAddress);
 router.delete('/addresses/:id', authenticateToken, deleteSavedAddress);
 router.put('/addresses/:id/default', authenticateToken, setDefaultAddress);
+
+// ── Farmer Payment Details ────────────────────────────────────────────────────
+router.put('/payment-details', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).userId;
+    const { upiId, accountNumber, ifscCode, accountHolderName, bankName } = req.body;
+    await User.findByIdAndUpdate(userId, {
+      'paymentDetails.upiId': upiId,
+      'paymentDetails.accountNumber': accountNumber,
+      'paymentDetails.ifscCode': ifscCode,
+      'paymentDetails.accountHolderName': accountHolderName,
+      'paymentDetails.bankName': bankName,
+    });
+    sendSuccess(res, { message: 'Payment details saved' });
+  } catch (error) {
+    sendError(res, 'Failed to save payment details', 500);
+  }
+});
+
 
 // ── Admin-only routes ─────────────────────────────────────────────────────────
 router.get('/', authenticateToken, requireRole(['admin']), getAllUsers);

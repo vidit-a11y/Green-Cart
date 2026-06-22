@@ -7,18 +7,20 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { useCart } from '../../../features/cart/context/CartContext';
 import { useToast } from '../../../utils/ToastContext';
 import { productService } from '../../../features/products/services/productService';
+import { ProductImage } from '../../../utils/productHelpers';
 import type { Product } from '../../../types';
 
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { addItem, isInCart } = useCart();
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -44,12 +46,18 @@ export function ProductDetails() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    
     addItem(product, quantity);
     showToast(`${quantity} × ${product.name} added to cart`, 'success');
+    setIsAdded(true);
+    
+    // Reset "Added to Cart" state after 2 seconds
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   const handleBuyNow = () => {
-    handleAddToCart();
+    if (!product) return;
+    addItem(product, quantity);
     navigate('/cart');
   };
 
@@ -72,6 +80,11 @@ export function ProductDetails() {
     );
   }
 
+  // Get stock count - handle potential field name variations
+  const stockCount = product.quantity ?? 0;
+  const isOutOfStock = stockCount === 0 || !product.isAvailable;
+  const isLowStock = stockCount > 0 && stockCount <= 10;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,20 +99,12 @@ export function ProductDetails() {
 
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           {/* Product Image */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden">
-            {product.images && product.images.length > 0 ? (
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full aspect-square object-cover"
-              />
-            ) : (
-              <div className="aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            )}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden aspect-square">
+            <ProductImage
+              product={product}
+              className="w-full h-full object-cover"
+              fallbackSize="xl"
+            />
           </div>
 
           {/* Product Info */}
@@ -109,10 +114,16 @@ export function ProductDetails() {
                 <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-full">
                   {product.category}
                 </span>
-                {product.isAvailable ? (
-                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-medium rounded-full">
-                    In Stock
-                  </span>
+                {!isOutOfStock ? (
+                  isLowStock ? (
+                    <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-sm font-medium rounded-full">
+                      ⚠️ Only {stockCount} left!
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-medium rounded-full">
+                      In Stock
+                    </span>
+                  )
                 ) : (
                   <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm font-medium rounded-full">
                     Out of Stock
@@ -156,9 +167,23 @@ export function ProductDetails() {
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">per {product.unit}</span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {product.quantity} {product.unit}s available
-              </p>
+              
+              {/* Dynamic stock display */}
+              <div className="flex items-center gap-2 mt-2">
+                {stockCount > 10 ? (
+                  <span className="text-sm text-green-600 dark:text-green-400">
+                    ✅ {stockCount} {product.unit}s available
+                  </span>
+                ) : stockCount > 0 ? (
+                  <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                    ⚠️ Only {stockCount} {product.unit}s left!
+                  </span>
+                ) : (
+                  <span className="text-sm text-red-600 dark:text-red-400 font-medium">
+                    ❌ Out of stock
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Quantity Selector */}
@@ -168,6 +193,7 @@ export function ProductDetails() {
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  disabled={isOutOfStock}
                 >
                   -
                 </button>
@@ -175,30 +201,42 @@ export function ProductDetails() {
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity((q) => Math.min(product.quantity, q + 1))}
+                  onClick={() => setQuantity((q) => Math.min(stockCount, q + 1))}
                   className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  disabled={isOutOfStock || quantity >= stockCount}
                 >
                   +
                 </button>
               </div>
+              {quantity >= stockCount && stockCount > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  (Maximum available)
+                </span>
+              )}
             </div>
 
             {/* Actions */}
             <div className="flex gap-4">
               <Button
+                type="button"
                 size="lg"
                 className="flex-1"
                 onClick={handleAddToCart}
-                disabled={!product.isAvailable || isInCart(product.id)}
+                disabled={isOutOfStock}
               >
-                {isInCart(product.id) ? 'Added to Cart' : 'Add to Cart'}
+                {isOutOfStock 
+                  ? 'Out of Stock' 
+                  : isAdded 
+                  ? 'Added to Cart ✓' 
+                  : 'Add to Cart'}
               </Button>
               <Button
+                type="button"
                 variant="outline"
                 size="lg"
                 className="flex-1"
                 onClick={handleBuyNow}
-                disabled={!product.isAvailable}
+                disabled={isOutOfStock}
               >
                 Buy Now
               </Button>
@@ -240,8 +278,12 @@ export function ProductDetails() {
                     className="cursor-pointer"
                     onClick={() => navigate(`/products/${related.id}`)}
                   >
-                    <div className="aspect-square bg-gray-100 dark:bg-gray-700 rounded-lg mb-3 flex items-center justify-center">
-                      <span className="text-4xl">🥬</span>
+                    <div className="aspect-square rounded-lg mb-3 overflow-hidden">
+                      <ProductImage
+                        product={related}
+                        className="w-full h-full object-cover"
+                        fallbackSize="lg"
+                      />
                     </div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                       {related.name}

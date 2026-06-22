@@ -12,6 +12,7 @@ import { Home } from './app/(main)/Home';
 import { ProductDetails } from './app/(main)/products/ProductDetails';
 import { Products } from './app/(main)/products/Products';
 import { OrderTracking } from './app/(main)/orders/OrderTracking';
+import { OrderHistory } from './app/(main)/orders/OrderHistory';
 import { Login } from './app/authentication/Login';
 import { Register } from './app/authentication/Register';
 import { Footer } from './components/shared/Footer';
@@ -64,6 +65,14 @@ function AppLayout() {
               element={
                 <ProtectedRoute allowedRoles={['consumer', 'admin']}>
                   <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute allowedRoles={['consumer', 'admin']}>
+                  <OrderHistory />
                 </ProtectedRoute>
               }
             />

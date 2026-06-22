@@ -5,6 +5,16 @@ export interface IGeoPoint {
   coordinates: [number, number];
 }
 
+export interface IPaymentDetails {
+  upiId?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  accountHolderName?: string;
+  bankName?: string;
+  aadhaarLast4?: string;
+  isVerified: boolean;
+}
+
 export interface IUser {
   _id?: string;
   name: string;
@@ -17,6 +27,7 @@ export interface IUser {
   address?: string;
   location?: IGeoPoint;
   savedAddresses?: ISavedAddress[];
+  paymentDetails?: IPaymentDetails;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -115,6 +126,15 @@ const userSchema = new mongoose.Schema<IUser>(
     address: { type: String },
     location: { type: geoPointSchema, required: false },
     savedAddresses: { type: [savedAddressSchema], default: [] },
+    paymentDetails: {
+      upiId: { type: String },
+      accountNumber: { type: String },
+      ifscCode: { type: String },
+      accountHolderName: { type: String },
+      bankName: { type: String },
+      aadhaarLast4: { type: String, maxlength: 4 },
+      isVerified: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );

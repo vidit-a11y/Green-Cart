@@ -52,10 +52,27 @@ export const createOrder = async (data: CreateOrderData) => {
     throw new Error('One or more products not found');
   }
 
+  // Validate stock availability BEFORE creating order
+  for (const item of items) {
+    const product = products.find((entry) => entry._id?.toString() === item.productId);
+    if (!product) {
+      throw new Error(`Product ${item.productId} not found`);
+    }
+    if (!product.isAvailable) {
+      throw new Error(`${product.name} is not available`);
+    }
+    
+    const availableStock = product.quantity ?? 0;
+    if (availableStock < item.quantity) {
+      throw new Error(
+        `Insufficient stock for ${product.name}. Available: ${availableStock} ${product.unit}s, Requested: ${item.quantity}`
+      );
+    }
+  }
+
   const orderItems = items.map((item) => {
     const product = products.find((entry) => entry._id?.toString() === item.productId);
     if (!product) throw new Error(`Product ${item.productId} not found`);
-    if (!product.isAvailable) throw new Error(`${product.name} is not available`);
 
     return {
       productId: item.productId,
@@ -102,6 +119,28 @@ export const createOrder = async (data: CreateOrderData) => {
     paymentMethod,
     status: 'pending',
   });
+
+  // Decrease stock for each ordered item
+  console.log('📦 Decreasing stock for ordered items...');
+  for (const item of items) {
+    const result = await Product.findByIdAndUpdate(
+      item.productId,
+      { 
+        $inc: { quantity: -item.quantity },
+      },
+      { new: true }
+    );
+    
+    if (result) {
+      console.log(`✅ Stock updated for ${result.name}: ${result.quantity} ${result.unit}s remaining`);
+      
+      // If stock reaches 0, mark as unavailable
+      if (result.quantity <= 0) {
+        await Product.findByIdAndUpdate(item.productId, { isAvailable: false });
+        console.log(`⚠️ ${result.name} is now out of stock`);
+      }
+    }
+  }
 
   return order;
 };

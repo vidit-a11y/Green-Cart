@@ -80,6 +80,7 @@ interface ProductCardProps {
   name: string;
   price: number;
   unit: string;
+  quantity?: number; // Stock quantity
   image?: string;
   imageUrl?: string;
   images?: string[];
@@ -97,6 +98,7 @@ export function ProductCard({
   name,
   price,
   unit,
+  quantity,
   image,
   imageUrl,
   images,
@@ -111,6 +113,11 @@ export function ProductCard({
   const { user } = useAuth();
   const canAddToCart = user?.role === 'consumer';
   const displayImage = image || imageUrl || images?.[0];
+  
+  // Calculate stock status
+  const stockCount = quantity ?? 0;
+  const isOutOfStock = stockCount === 0;
+  const isLowStock = stockCount > 0 && stockCount <= 10;
 
   return (
     <Card
@@ -152,14 +159,24 @@ export function ProductCard({
           <span className="text-white text-sm font-medium">Click to view</span>
         </div>
 
-        {/* Top badge - optional organic tag */}
+        {/* Top badge - stock status */}
         <div className="absolute top-3 left-3">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur text-xs font-semibold text-green-700 dark:text-green-400 shadow-sm">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Organic
-          </span>
+          {isOutOfStock ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500 text-white text-xs font-semibold shadow-sm">
+              ❌ Out of Stock
+            </span>
+          ) : isLowStock ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500 text-white text-xs font-semibold shadow-sm">
+              ⚠️ Only {stockCount} left!
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur text-xs font-semibold text-green-700 dark:text-green-400 shadow-sm">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Organic
+            </span>
+          )}
         </div>
       </div>
 
@@ -233,14 +250,23 @@ export function ProductCard({
               aria-label={`Add ${name} to cart`}
               onClick={(e) => {
                 e.stopPropagation();
-                onAddToCart();
+                if (!isOutOfStock) {
+                  onAddToCart();
+                }
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium shadow-lg shadow-green-600/30 hover:shadow-xl hover:shadow-green-600/40 hover:-translate-y-0.5 active:scale-95 transition-all duration-300"
+              disabled={isOutOfStock}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium shadow-lg transition-all duration-300 ${
+                isOutOfStock
+                  ? 'bg-gray-400 text-white cursor-not-allowed opacity-50'
+                  : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-green-600/30 hover:shadow-xl hover:shadow-green-600/40 hover:-translate-y-0.5 active:scale-95'
+              }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="hidden sm:inline">Add to Cart</span>
+              <span className="hidden sm:inline">
+                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+              </span>
             </button>
           )}
         </div>

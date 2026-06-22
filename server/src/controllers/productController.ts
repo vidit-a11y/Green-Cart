@@ -45,9 +45,18 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
     const imageUrl = req.file?.path;
     const farmerId = String(req.body.farmerId || (req as any).userId || '');
     const farmer = farmerId ? await User.findById(farmerId).select('location') : null;
+
+    // ── 1.5% admin cut: consumer price = ceil(farmerPrice * 1.015) ──
+    const ADMIN_CUT_PCT = 1.5;
+    const farmerPrice = Number(req.body.price);
+    const adminCut = parseFloat(((farmerPrice * ADMIN_CUT_PCT) / 100).toFixed(2));
+    const consumerPrice = Math.ceil(farmerPrice + adminCut);
+
     const product = await productService.createProduct({
       ...req.body,
-      price: Number(req.body.price),
+      farmerPrice,
+      adminCut,
+      price: consumerPrice,           // consumer sees this
       quantity: Number(req.body.quantity),
       isAvailable: req.body.isAvailable === 'false' ? false : Boolean(req.body.isAvailable ?? true),
       ...(farmer?.location ? { geoLocation: farmer.location } : {}),
@@ -65,9 +74,21 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const currentProduct = await productService.getProductById(req.params.id);
     const farmerId = String(req.body.farmerId || currentProduct.farmerId || '');
     const farmer = farmerId ? await User.findById(farmerId).select('location') : null;
+
+    // Re-calculate admin cut whenever price changes
+    const priceUpdate: Record<string, number> = {};
+    if (req.body.price !== undefined) {
+      const ADMIN_CUT_PCT = 1.5;
+      const farmerPrice = Number(req.body.price);
+      const adminCut = parseFloat(((farmerPrice * ADMIN_CUT_PCT) / 100).toFixed(2));
+      priceUpdate.farmerPrice = farmerPrice;
+      priceUpdate.adminCut = adminCut;
+      priceUpdate.price = Math.ceil(farmerPrice + adminCut);
+    }
+
     const product = await productService.updateProduct(req.params.id, {
       ...req.body,
-      ...(req.body.price !== undefined ? { price: Number(req.body.price) } : {}),
+      ...priceUpdate,
       ...(req.body.quantity !== undefined ? { quantity: Number(req.body.quantity) } : {}),
       ...(req.body.isAvailable !== undefined
         ? { isAvailable: req.body.isAvailable === 'false' ? false : Boolean(req.body.isAvailable) }

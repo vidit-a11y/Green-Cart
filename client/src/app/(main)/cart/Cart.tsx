@@ -8,6 +8,7 @@ import { useCart } from '../../../features/cart/context/CartContext';
 import { useToast } from '../../../utils/ToastContext';
 import { locationService } from '../../../features/products/services/locationService';
 import { useCustomerLocation } from '../../../hooks/useCustomerLocation';
+import { ProductImage } from '../../../utils/productHelpers';
 
 const MIN_ORDER_VALUE = 199;
 
@@ -89,16 +90,12 @@ export function Cart() {
           <div className="w-full lg:w-2/3 space-y-4 md:space-y-6">
             {items.map((item) => (
               <Card key={item.product.id} padding="md" className="flex gap-3 sm:gap-4">
-                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
-                  {item.product.images && item.product.images.length > 0 ? (
-                    <img
-                      src={item.product.images[0]}
-                      alt={item.product.name}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  ) : (
-                    <span className="text-2xl sm:text-3xl" aria-hidden="true">🥬</span>
-                  )}
+                <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-lg flex-shrink-0 overflow-hidden">
+                  <ProductImage
+                    product={item.product}
+                    className="w-full h-full object-cover rounded-lg"
+                    fallbackSize="sm"
+                  />
                 </div>
 
                 <div className="flex-1 min-w-0">

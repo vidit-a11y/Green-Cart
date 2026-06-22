@@ -6,6 +6,7 @@ import {
   getAllOrders,
   getConsumerOrders,
   getFarmerOrders,
+  getMyOrders,
   getOrderById,
   updateOrderStatus,
 } from '../controllers/orderController.js';
@@ -19,12 +20,13 @@ const router = express.Router();
 router.use(authenticateToken);
 
 router.post('/quote', requireRole(['consumer', 'admin']), getDeliveryQuote);
-router.post('/', requireRole(['consumer', 'admin']), validateOrder, createOrder); // consumer creates order
-router.get('/consumer', getConsumerOrders);                                 // consumer views their orders
-router.get('/farmer', requireRole(['farmer', 'admin']), getFarmerOrders);   // farmer views their orders
-router.get('/', requireRole(['admin']), getAllOrders);                       // admin views all orders
-router.get('/:id', getOrderById);                                           // any auth user views one order
-router.patch('/:id/status', requireRole(['farmer', 'admin']), updateOrderStatus); // farmer/admin updates status
-router.patch('/:id/cancel', cancelOrder);                                   // consumer cancels their order
+router.post('/', requireRole(['consumer', 'admin']), validateOrder, createOrder);
+router.get('/my-orders', getMyOrders);                                      // consumer order history
+router.get('/consumer', getConsumerOrders);
+router.get('/farmer', requireRole(['farmer', 'admin']), getFarmerOrders);
+router.get('/', requireRole(['admin']), getAllOrders);
+router.get('/:id', getOrderById);
+router.patch('/:id/status', requireRole(['farmer', 'admin']), updateOrderStatus);
+router.patch('/:id/cancel', cancelOrder);
 
 export default router;

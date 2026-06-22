@@ -96,6 +96,15 @@ export function Navbar() {
                   {t('nav.products')}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-green-600 to-emerald-500 group-hover:w-full transition-all duration-300" />
                 </Link>
+                {user?.role === 'consumer' && (
+                  <Link
+                    to="/orders"
+                    className="relative text-gray-700 dark:text-gray-200 hover:text-green-700 dark:hover:text-green-400 font-medium transition-colors group text-sm xl:text-base"
+                  >
+                    📦 My Orders
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-green-600 to-emerald-500 group-hover:w-full transition-all duration-300" />
+                  </Link>
+                )}
                 <LanguageSwitcher />
               </div>
 
@@ -302,6 +311,17 @@ export function Navbar() {
                     {totalItems}
                   </span>
                 )}
+              </Link>
+            )}
+
+            {user?.role === 'consumer' && (
+              <Link
+                to="/orders"
+                onClick={closeMobileDrawer}
+                className="flex items-center gap-3 px-4 py-3 min-h-[48px] text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-400 rounded-xl font-medium transition-colors"
+              >
+                <span className="text-xl">📦</span>
+                My Orders
               </Link>
             )}
 

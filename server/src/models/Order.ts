@@ -52,6 +52,11 @@ export interface IOrder {
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   deliveryAddress: string;
   paymentMethod: string;
+  // Razorpay payment fields
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentId?: string;
+  razorpayOrderId?: string;
+  paidAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,7 +125,16 @@ const orderSchema = new mongoose.Schema<IOrder>(
       index: true,
     },
     deliveryAddress: { type: String, required: true },
-    paymentMethod: { type: String, required: true },
+    paymentMethod: { type: String, required: true, default: 'cod' },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed', 'refunded'],
+      default: 'pending',
+      index: true,
+    },
+    paymentId: { type: String },
+    razorpayOrderId: { type: String },
+    paidAt: { type: Date },
   },
   {
     timestamps: true,
