@@ -1,32 +1,16 @@
-import express, { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import itemRoutes from './routes/itemRoutes.js';
+import './env.js';
+import { env } from './env.js';
+import app from './app.js';
+import { connectDatabase } from './config/database.js';
 
-// 1. Load config FIRST (so the database URI is ready)
-dotenv.config();
+const PORT = parseInt(env.PORT, 10);
 
-// 2. Create the app SECOND (Now 'app' is born!)
-const app = express();
-
-// 3. Setup Middlewares THIRD
-app.use(cors());
-app.use(express.json());
-
-// 4. Use your Routes FOURTH (Now 'app' exists, so this won't crash)
-app.use('/api/items', itemRoutes);
-
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || "";
-
-// 5. Connect to the Database
-mongoose.connect(MONGO_URI)
-  .then(() => console.log("✅ GreenCart Database Connected!"))
-  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
-
-// 6. Start the server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+connectDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ GreenCart server running at http://localhost:${PORT}`);
+    console.log(`   Environment: ${env.NODE_ENV}`);
+  });
+}).catch((err) => {
+  console.error('❌ Failed to start server:', err);
+  process.exit(1);
 });
-

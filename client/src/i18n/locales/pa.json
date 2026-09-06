@@ -1,0 +1,127 @@
+{
+  "app": {
+    "name": "GreenCart",
+    "tagline": "ਕਿਸਾਨ ਤੋਂ ਸਿੱਧੇ ਤੁਹਾਡੇ ਦਰਵਾਜ਼ੇ ਤੱਕ"
+  },
+  "nav": {
+    "home": "ਹੋਮ",
+    "products": "ਉਤਪਾਦ",
+    "cart": "ਕਾਰਟ",
+    "login": "ਲਾਗਿਨ",
+    "register": "ਰਜਿਸਟਰ",
+    "logout": "ਲਾਗਆਉਟ",
+    "dashboard": "ਡੈਸ਼ਬੋਰਡ",
+    "farmerDashboard": "ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ",
+    "becomeFarmer": "ਕਿਸਾਨ ਬਣੋ"
+  },
+  "home": {
+    "hero": {
+      "title": "ਕਿਸਾਨ ਤੋਂ ਸਿੱਧੇ ਤੁਹਾਡੇ ਦਰਵਾਜ਼ੇ ਤੱਕ",
+      "subtitle": "ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਨਾਲ ਸਿੱਧੇ ਜੁੜੋ। ਤਾਜ਼ੇ, ਕੁਦਰਤੀ ਉਤਪਾਦ ਸਿੱਧੇ ਆਪਣੇ ਘਰ ਲਿਆਓ।",
+      "shopNow": "ਹੁਣ ਖਰੀਦੋ",
+      "joinAsFarmer": "ਕਿਸਾਨ ਵਜੋਂ ਜੁੜੋ"
+    },
+    "categories": {
+      "title": "ਸ਼੍ਰੇਣੀ ਅਨੁਸਾਰ ਖਰੀਦਦਾਰੀ",
+      "viewAll": "ਸਭ ਦੇਖੋ"
+    },
+    "featured": {
+      "title": "ਵਿਸ਼ੇਸ਼ ਉਤਪਾਦ",
+      "viewAll": "ਸਭ ਦੇਖੋ"
+    }
+  },
+  "products": {
+    "title": "ਸਾਰੇ ਉਤਪਾਦ",
+    "search": "ਉਤਪਾਦ ਖੋਜ...",
+    "categories": "ਸ਼੍ਰੇਣੀਆਂ",
+    "all": "ਸਭ",
+    "vegetables": "ਸਬਜੀਆਂ",
+    "fruits": "ਫਲ",
+    "dairy": "ਡੇਅਰੀ ਉਤਪਾਦ",
+    "noProducts": "ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲਿਆ",
+    "addToCart": "ਕਾਰਟ ਵਿੱਚ ਜੋੜੋ",
+    "inCart": "ਕਾਰਟ ਵਿੱਚ",
+    "outOfStock": "ਸਟਾਕ ਵਿੱਚ ਨਹੀਂ"
+  },
+  "cart": {
+    "title": "ਸ਼ਾਪਿੰਗ ਕਾਰਟ",
+    "empty": "ਤੁਹਾਡੀ ਕਾਰਟ ਖਾਲੀ ਹੈ",
+    "continueShopping": "ਖਰੀਦਦਾਰੀ ਜਾਰੀ ਰੱਖੋ",
+    "subtotal": "ਉਪ-ਯੋਗ",
+    "deliveryFee": "ਡਿਲੀਵਰੀ ਫੀਸ",
+    "free": "ਮੁਫ਼ਤ",
+    "total": "ਕੁੱਲ",
+    "checkout": "ਚੈਕਆਉਟ",
+    "items": "ਆਈਟਮ"
+  },
+  "checkout": {
+    "title": "ਚੈਕਆਉਟ",
+    "deliveryInfo": "ਡਿਲੀਵਰੀ ਜਾਣਕਾਰੀ",
+    "fullName": "ਪੂਰਾ ਨਾਂ",
+    "phone": "ਫੋਨ",
+    "address": "ਡਿਲੀਵਰੀ ਐਡਰੈਸ",
+    "city": "ਸ਼ਹਿਰ",
+    "state": "ਰਾਜ",
+    "zipCode": "ਪਿੰਨ ਕੋਡ",
+    "payment": "ਭੁਗਤਾਨ ਦਾ ਤਰੀਕਾ",
+    "card": "ਕ੍ਰੈਡਿਟ/ਡੈਬਿਟ ਕਾਰਡ",
+    "cod": "ਕੈਸ਼ ਓਨ ਡਿਲੀਵਰੀ",
+    "upi": "ਯੂਪੀਆਈ",
+    "placeOrder": "ਆਰਡਰ ਦਿਓ",
+    "orderSummary": "ਆਰਡਰ ਸਾਰਾਂਸ਼"
+  },
+  "auth": {
+    "login": {
+      "title": "ਵਾਪਸ ਸੁਆਗਤ ਹੈ",
+      "email": "ਈਮੇਲ",
+      "password": "ਪਾਸਵਰਡ",
+      "submit": "ਸਾਈਨ ਇਨ",
+      "noAccount": "ਖਾਤਾ ਨਹੀਂ?",
+      "register": "ਖਾਤਾ ਬਣਾਓ"
+    },
+    "register": {
+      "title": "ਖਾਤਾ ਬਣਾਓ",
+      "name": "ਪੂਰਾ ਨਾਂ",
+      "email": "ਈਮੇਲ",
+      "phone": "ਫੋਨ",
+      "password": "ਪਾਸਵਰਡ",
+      "consumer": "ਉਤਪਾਦ ਖਰੀਦੋ",
+      "farmer": "ਉਤਪਾਦ ਵੇਚੋ",
+      "submit": "ਖਾਤਾ ਬਣਾਓ",
+      "hasAccount": "ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ?",
+      "login": "ਸਾਈਨ ਇਨ"
+    }
+  },
+  "common": {
+    "loading": "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+    "error": "ਗਲਤੀ",
+    "success": "ਸਫਲਤਾ",
+    "cancel": "ਰੱਦ ਕਰੋ",
+    "save": "ਸੇਵ",
+    "edit": "ਐਡਿਟ",
+    "delete": "ਡਿਲੀਟ",
+    "close": "ਬੰਦ ਕਰੋ",
+    "search": "ਖੋਜ",
+    "filter": "ਫਿਲਟਰ",
+    "sort": "ਸੋਰਟ",
+    "all": "ਸਭ",
+    "submit": "ਸਬਮਿਟ",
+    "update": "ਅਪਡੇਟ",
+    "create": "ਬਣਾਓ",
+    "back": "ਵਾਪਸ",
+    "continue": "ਜਾਰੀ ਰੱਖੋ",
+    "language": "ਭਾਸ਼ਾ"
+  },
+  "footer": {
+    "shop": "ਦੁਕਾਨ",
+    "company": "ਕੰਪਨੀ",
+    "support": "ਸਹਾਇਤਾ",
+    "legal": "ਕਾਨੂੰਨੀ",
+    "about": "ਸਾਡੇ ਬਾਰੇ",
+    "farmers": "ਸਾਡੇ ਕਿਸਾਨ",
+    "terms": "ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ",
+    "privacy": "ਗੋਪਨੀਅਤਾ ਨੀਤੀ",
+    "rights": "ਸਾਰੇ ਹੱਕ ਰਾਖਵੇਂ ਹਨ",
+    "madeWithLove": "ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਲਈ ਮਾਣ ਨਾਲ ਬਣਾਇਆ"
+  }
+}
