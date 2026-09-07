@@ -10,7 +10,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
     try {
       // Sending the POST request to your Node server
-      await axios.post('http://localhost:5000/api/items', {
+      axios.post(`${import.meta.env.VITE_API_URL}/items`, {
         name: name,
         location: "Jaipur" // Default location for Vidit
       });
