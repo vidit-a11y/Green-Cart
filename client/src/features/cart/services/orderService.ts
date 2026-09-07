@@ -20,6 +20,25 @@ interface DeliveryQuoteData {
   customerLocation: GeoPoint;
 }
 
+export interface RiderInfo {
+  id?: string;
+  name?: string;
+  phone?: string;
+  vehicle?: string;
+  vehicleNumber?: string;
+  rating?: number;
+  photo?: string;
+}
+
+export interface RiderLocationResponse {
+  success: boolean;
+  coordinates: [number, number]; // [longitude, latitude]
+  progress: number;
+  deliveryStatus: Order['deliveryStatus'];
+  rider: RiderInfo;
+  estimatedDeliveryTime?: string;
+}
+
 export const orderService = {
   async create(data: CreateOrderData): Promise<Order> {
     try {
@@ -54,6 +73,11 @@ export const orderService = {
   async getById(id: string): Promise<Order> {
     const response = await api.get<ApiResponse<Order>>(`/orders/${id}`);
     return response.data.data;
+  },
+
+  async getRiderLocation(id: string): Promise<RiderLocationResponse> {
+    const response = await api.get<RiderLocationResponse>(`/orders/${id}/rider-location`);
+    return response.data;
   },
 
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {

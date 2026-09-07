@@ -21,8 +21,7 @@ const statusFlow: OrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered
 
 const deliveryStatusLabels: Record<Order['deliveryStatus'], string> = {
   pending: 'Pending',
-  farmer_accepted: 'Farmer accepted',
-  porter_assigned: 'Porter assigned',
+  farmer_accepted: 'Rider assigned',
   picked_up: 'Picked up',
   in_transit: 'In transit',
   delivered: 'Delivered',
@@ -75,8 +74,8 @@ export function FarmerOrders() {
     try {
       const updatedOrder = await orderService.updateStatus(orderId, newStatus);
 
-      if (newStatus === 'confirmed' && updatedOrder.porterOrderId) {
-        showToast('Order accepted and Porter assigned successfully', 'success');
+      if (newStatus === 'confirmed') {
+        showToast('Order accepted! Simulated rider assigned.', 'success');
       } else {
         showToast(`Order status updated to ${newStatus}`, 'success');
       }
@@ -175,10 +174,10 @@ export function FarmerOrders() {
                           {(order.distanceKm ?? order.deliveryDistanceKm)?.toFixed(1)} km
                         </p>
                       )}
-                      {order.deliveryPartnerName && (
+                      {order.riderName && (
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          Partner: {order.deliveryPartnerName}
-                          {order.deliveryPartnerPhone ? ` • ${order.deliveryPartnerPhone}` : ''}
+                          🛵 {order.riderName}
+                          {order.riderPhone ? ` • ${order.riderPhone}` : ''}
                         </p>
                       )}
                     </div>
@@ -282,25 +281,28 @@ export function FarmerOrders() {
                     </p>
                     <p>Delivery fee: {selectedOrder.deliveryFee === 0 ? 'FREE' : `Rs. ${selectedOrder.deliveryFee}`}</p>
                     <p>Minimum order met: {selectedOrder.minimumOrderMet ? 'Yes' : 'No'}</p>
-                    {selectedOrder.porterOrderId && <p>Porter Order ID: {selectedOrder.porterOrderId}</p>}
-                    {selectedOrder.deliveryPartnerName && (
-                      <p>
-                        Driver: {selectedOrder.deliveryPartnerName}
-                        {selectedOrder.deliveryPartnerPhone ? ` • ${selectedOrder.deliveryPartnerPhone}` : ''}
-                      </p>
+                    {selectedOrder.riderName && (
+                      <div className="mt-2 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide mb-1">🛵 Delivery Rider</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">{selectedOrder.riderName}</p>
+                        {selectedOrder.riderVehicle && (
+                          <p className="text-sm">
+                            {selectedOrder.riderVehicle}
+                            {selectedOrder.riderVehicleNumber ? ` • ${selectedOrder.riderVehicleNumber}` : ''}
+                          </p>
+                        )}
+                        {selectedOrder.riderRating !== undefined && (
+                          <p className="text-xs text-yellow-500 font-medium">⭐ {selectedOrder.riderRating.toFixed(1)}</p>
+                        )}
+                        {selectedOrder.riderPhone && (
+                          <a href={`tel:${selectedOrder.riderPhone}`} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                            📞 {selectedOrder.riderPhone}
+                          </a>
+                        )}
+                      </div>
                     )}
                     {selectedOrder.estimatedDeliveryTime && (
                       <p>ETA: {new Date(selectedOrder.estimatedDeliveryTime).toLocaleString()}</p>
-                    )}
-                    {selectedOrder.porterTrackingUrl && (
-                      <a
-                        href={selectedOrder.porterTrackingUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex text-green-600 hover:text-green-700"
-                      >
-                        Open tracking link
-                      </a>
                     )}
                   </div>
 

@@ -37,18 +37,39 @@ export interface IOrder {
   customerLocation?: IGeoPoint;
   farmerLocation?: IGeoPoint;
   minimumOrderMet: boolean;
-  porterOrderId?: string;
-  porterTrackingUrl?: string;
-  deliveryStatus:
-    | 'pending'
-    | 'farmer_accepted'
-    | 'porter_assigned'
-    | 'picked_up'
-    | 'in_transit'
-    | 'delivered';
-  deliveryPartnerName?: string;
-  deliveryPartnerPhone?: string;
-  estimatedDeliveryTime?: Date;
+ // Simulated delivery rider fields
+
+assignedRider?: string;
+
+riderName?: string;
+
+riderPhone?: string;
+
+riderVehicle?: string;
+
+riderVehicleNumber?: string;
+
+riderRating?: number;
+
+riderPhoto?: string;
+
+simulationStartTime?: Date;
+
+estimatedMinutes?: number;
+
+deliveryStatus:
+
+  | 'pending'
+
+  | 'farmer_accepted'
+
+  | 'picked_up'
+
+  | 'in_transit'
+
+  | 'delivered';
+
+estimatedDeliveryTime?: Date;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   deliveryAddress: string;
   paymentMethod: string;
@@ -107,17 +128,25 @@ const orderSchema = new mongoose.Schema<IOrder>(
     customerLocation: { type: geoPointSchema, required: false },
     farmerLocation: { type: geoPointSchema, required: false },
     minimumOrderMet: { type: Boolean, required: true, default: false },
-    porterOrderId: { type: String },
-    porterTrackingUrl: { type: String },
+    // Simulated delivery rider
+    assignedRider: { type: String },
+    riderName: { type: String },
+    riderPhone: { type: String },
+    riderVehicle: { type: String },
+    riderVehicleNumber: { type: String },
+    riderRating: { type: Number },
+    riderPhoto: { type: String },
+    simulationStartTime: { type: Date },
+    estimatedMinutes: { type: Number },
+
     deliveryStatus: {
       type: String,
-      enum: ['pending', 'farmer_accepted', 'porter_assigned', 'picked_up', 'in_transit', 'delivered'],
+      enum: ['pending', 'farmer_accepted', 'picked_up', 'in_transit', 'delivered'],
       default: 'pending',
       index: true,
     },
-    deliveryPartnerName: { type: String },
-    deliveryPartnerPhone: { type: String },
-    estimatedDeliveryTime: { type: Date },
+
+estimatedDeliveryTime: { type: Date },
     status: {
       type: String,
       enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],

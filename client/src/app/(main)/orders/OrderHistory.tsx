@@ -157,7 +157,6 @@ const statusLabel = (s: string) => {
   const map: Record<string, string> = {
     pending: '🕐 Pending',
     farmer_accepted: '✅ Accepted',
-    porter_assigned: '🚴 Partner Assigned',
     picked_up: '📦 Picked Up',
     in_transit: '🚚 In Transit',
     delivered: '✅ Delivered',
@@ -165,6 +164,7 @@ const statusLabel = (s: string) => {
   };
   return map[s] ?? s;
 };
+
 
 const statusColors = (s: string) => {
   if (s === 'delivered') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';

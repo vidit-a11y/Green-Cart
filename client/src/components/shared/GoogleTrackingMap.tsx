@@ -1,6 +1,6 @@
 /**
  * GoogleTrackingMap
- * Farmer pickup (🌾) + customer delivery (🏠) markers with a green polyline.
+ * Farmer pickup (🌾) + optional rider (🛵) + customer delivery (🏠) markers.
  * Used by DeliveryMap (checkout) and order tracking.
  *
  * NOTE: Does NOT call useLoadScript — the parent component is responsible for
@@ -12,6 +12,8 @@ import { GoogleMap, Marker, Polyline } from '@react-google-maps/api';
 interface GoogleTrackingMapProps {
   farmerCoords: { lat: number; lng: number };
   customerCoords: { lat: number; lng: number };
+  /** Optional: live rider position. When provided, a rider marker is shown. */
+  riderCoords?: { lat: number; lng: number };
   farmerName?: string;
   farmerLabel?: string;
   customerLabel?: string;
@@ -23,6 +25,7 @@ interface GoogleTrackingMapProps {
 export function GoogleTrackingMap({
   farmerCoords,
   customerCoords,
+  riderCoords,
   farmerName,
   distanceKm,
   farmerLabel = 'Farmer location',
@@ -42,7 +45,8 @@ export function GoogleTrackingMap({
     );
   }
 
-  const center = {
+  // Center on rider if present, otherwise midpoint of farmer ↔ customer
+  const center = riderCoords ?? {
     lat: (farmerCoords.lat + customerCoords.lat) / 2,
     lng: (farmerCoords.lng + customerCoords.lng) / 2,
   };
@@ -53,8 +57,14 @@ export function GoogleTrackingMap({
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}
         zoom={12}
-        options={{ streetViewControl: false, mapTypeControl: false, fullscreenControl: false, clickableIcons: false }}
+        options={{
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          clickableIcons: false,
+        }}
       >
+        {/* 🌾 Farmer marker — green dot */}
         <Marker
           position={farmerCoords}
           title={farmerName || farmerLabel}
@@ -63,6 +73,8 @@ export function GoogleTrackingMap({
             scaledSize: new window.google.maps.Size(40, 40),
           }}
         />
+
+        {/* 🏠 Customer marker — blue dot */}
         <Marker
           position={customerCoords}
           title={customerLabel}
@@ -71,10 +83,55 @@ export function GoogleTrackingMap({
             scaledSize: new window.google.maps.Size(40, 40),
           }}
         />
-        <Polyline
-          path={[farmerCoords, customerCoords]}
-          options={{ strokeColor: '#16a34a', strokeOpacity: 0.85, strokeWeight: 4, geodesic: true }}
-        />
+
+        {/* 🛵 Simulated rider marker — yellow/orange dot */}
+        {riderCoords && (
+          <Marker
+            position={riderCoords}
+            title="Delivery rider"
+            icon={{
+              url: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+              scaledSize: new window.google.maps.Size(44, 44),
+            }}
+            zIndex={10}
+          />
+        )}
+
+        {/* Route polyline: farmer → rider (dashed) → customer (solid) */}
+        {riderCoords ? (
+          <>
+            {/* Farmer → Rider: already-covered segment */}
+            <Polyline
+              path={[farmerCoords, riderCoords]}
+              options={{
+                strokeColor: '#16a34a',
+                strokeOpacity: 0.5,
+                strokeWeight: 3,
+                geodesic: true,
+              }}
+            />
+            {/* Rider → Customer: remaining segment */}
+            <Polyline
+              path={[riderCoords, customerCoords]}
+              options={{
+                strokeColor: '#f97316',
+                strokeOpacity: 0.85,
+                strokeWeight: 4,
+                geodesic: true,
+              }}
+            />
+          </>
+        ) : (
+          <Polyline
+            path={[farmerCoords, customerCoords]}
+            options={{
+              strokeColor: '#16a34a',
+              strokeOpacity: 0.85,
+              strokeWeight: 4,
+              geodesic: true,
+            }}
+          />
+        )}
       </GoogleMap>
 
       {/* Distance badge */}
@@ -91,6 +148,12 @@ export function GoogleTrackingMap({
           <span className="w-3 h-3 rounded-full bg-green-600 shrink-0" />
           <span className="text-gray-700 font-medium">Farmer</span>
         </div>
+        {riderCoords && (
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />
+            <span className="text-gray-700 font-medium">Rider</span>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
           <span className="text-gray-700 font-medium">You</span>

@@ -119,18 +119,23 @@ export interface Order {
   customerLocation?: GeoPoint;
   farmerLocation?: GeoPoint;
   minimumOrderMet: boolean;
-  porterOrderId?: string;
-  porterTrackingUrl?: string;
+  // Simulated rider fields
+  assignedRider?: string;
+  riderName?: string;
+  riderPhone?: string;
+  riderVehicle?: string;
+  riderVehicleNumber?: string;
+  riderRating?: number;
+  riderPhoto?: string;
+  simulationStartTime?: string;
+  estimatedMinutes?: number;
+  estimatedDeliveryTime?: string;
   deliveryStatus:
     | 'pending'
     | 'farmer_accepted'
-    | 'porter_assigned'
     | 'picked_up'
     | 'in_transit'
     | 'delivered';
-  deliveryPartnerName?: string;
-  deliveryPartnerPhone?: string;
-  estimatedDeliveryTime?: string;
   status: OrderStatus;
   deliveryAddress: string;
   paymentMethod: string;

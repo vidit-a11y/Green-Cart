@@ -7,9 +7,8 @@ import {
   normalizeCoordinates,
   toGeoPoint,
 } from './deliveryService.js';
-import { createPorterOrder, getPorterQuote } from './porter.service.js';
+import { assignSimulatedRider } from './simulationService.js';
 
-/** Explicit fee rule per Step 3: free within 7.5 km, ₹50 beyond */
 const calcDeliveryFee = (distanceKm: number): number => (distanceKm <= 7.5 ? 0 : 50);
 
 interface CreateOrderData {
@@ -90,9 +89,9 @@ export const createOrder = async (data: CreateOrderData) => {
   }
 
   const quote = await buildDeliveryQuote(normalizedCoords, items);
-  const porterQuote = await getPorterQuote(quote.farmerCoordinates, normalizedCoords);
+  // const porterQuote = await getPorterQuote(quote.farmerCoordinates, normalizedCoords);
   const estimatedDeliveryTime = new Date(
-    Date.now() + Math.max(45, porterQuote.etaMinutes || Math.ceil(quote.distanceKm * 12)) * 60 * 1000
+    Date.now() + Math.max(45, Math.ceil(quote.distanceKm * 12)) * 60 * 1000
   );
 
   // Explicit delivery fee override per Step 3 spec
@@ -205,57 +204,35 @@ export const updateOrderStatus = async (
   }
 
   if (status === 'confirmed') {
-    if (!order.customerLocation?.coordinates) {
-      throw new Error('Customer delivery location is missing');
-    }
-
-    const farmer = order.farmerId
-      ? await User.findById(order.farmerId).select('name phone address location')
-      : null;
-    const consumer = await User.findById(order.consumerId).select('name phone address');
-
-    const farmerCoords = order.farmerLocation?.coordinates || farmer?.location?.coordinates;
-    if (!farmer || !farmerCoords) {
-      throw new Error('Farmer location is missing');
-    }
-
-    if (order.porterOrderId) {
-      order.status = 'confirmed';
-      order.deliveryStatus = order.deliveryStatus === 'pending' ? 'porter_assigned' : order.deliveryStatus;
-      await order.save();
-      return order;
-    }
-
-    const deliveryContact = parseDeliveryContact(order.deliveryAddress);
-    const porterOrder = await createPorterOrder({
-      orderId: order.id || order._id!.toString(),
-      pickupAddress: order.farmerLocationLabel || farmer.address || 'Farmer pickup location',
-      pickupCoords: farmerCoords,
-      pickupContactName: farmer.name,
-      pickupContactPhone: farmer.phone || '',
-      dropAddress: order.deliveryAddress,
-      dropCoords: order.customerLocation.coordinates,
-      dropContactName: consumer?.name || deliveryContact.name,
-      dropContactPhone: consumer?.phone || deliveryContact.phone,
-      itemDescription: buildItemDescription(order.items),
-      orderValue: order.totalAmount,
-    });
-
-    order.porterOrderId = porterOrder.porterOrderId;
-    order.porterTrackingUrl = porterOrder.trackingUrl;
-    order.deliveryPartnerName = porterOrder.driverName;
-    order.deliveryPartnerPhone = porterOrder.driverPhone;
-    order.estimatedDeliveryTime = porterOrder.etaMinutes
-      ? new Date(Date.now() + porterOrder.etaMinutes * 60 * 1000)
-      : order.estimatedDeliveryTime;
-    order.farmerLocation = toGeoPoint(farmerCoords);
-    order.distanceKm = order.distanceKm ?? order.deliveryDistanceKm;
-    order.status = 'confirmed';
-    order.deliveryStatus = 'porter_assigned';
-    await order.save();
-    return order;
+  if (!order.customerLocation?.coordinates) {
+    throw new Error('Customer delivery location is missing');
   }
 
+  const farmer = order.farmerId
+    ? await User.findById(order.farmerId).select('name phone address location')
+    : null;
+
+  const consumer = await User.findById(order.consumerId).select('name phone address');
+
+  const farmerCoords =
+    order.farmerLocation?.coordinates || farmer?.location?.coordinates;
+
+  if (!farmer || !farmerCoords) {
+    throw new Error('Farmer location is missing');
+  }
+
+  // GreenCart simulated delivery.
+  // No external delivery partner / Porter API is used.
+
+  order.farmerLocation = toGeoPoint(farmerCoords);
+  order.distanceKm = order.distanceKm ?? order.deliveryDistanceKm;
+
+  order.status = 'confirmed';
+
+  await assignSimulatedRider(order);
+
+  return order;
+}
   if (status === 'shipped') {
     order.status = 'shipped';
     order.deliveryStatus = order.deliveryStatus === 'picked_up' ? 'picked_up' : 'in_transit';
